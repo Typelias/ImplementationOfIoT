@@ -10,6 +10,22 @@ class Socket
 {
 private:
     int s;
+    struct HTTPRequest
+    {
+        HTTPRequest(std::string input)
+        {
+            parseString(input);
+        }
+
+        std::string verb;
+        std::string endpoint;
+        std::string host;
+
+    private:
+        void parseString(std::string input)
+        {
+        }
+    };
 
 public:
     int success = 0;
