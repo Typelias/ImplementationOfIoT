@@ -240,15 +240,16 @@ func parseRequest(req HTTPRequest) string {
 
 func handleConnection(c net.Conn) {
 	fmt.Printf("Serving %s \n", c.RemoteAddr().String())
-
 	requestString := ""
 	bufsize := 1024
 	buf := make([]byte, bufsize)
+	//reader := bufio.NewReader(c)
 	n, err := c.Read(buf)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+	fmt.Println(n)
 	requestString += string(buf)
 	if n == bufsize {
 		for n == bufsize {
