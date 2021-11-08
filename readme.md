@@ -1,5 +1,5 @@
-#Implementation of IoT protocolls
-##Labb0
+# Implementation of IoT protocolls
+## Labb0
 Go implementation of HTTP server for IoT device.
 - POST. Used to add new sensor id. 201 success. 409 if sensor already exists.
   Endpoint: 
@@ -44,5 +44,5 @@ Endpoint:
       "id": ID_OF_DEVICE
   }
   ```
-##TCPSocketC++
+## TCPSocketC++
 TCP socket connection was planed to be HTTP server but moved to Golang. It is mostly C code
