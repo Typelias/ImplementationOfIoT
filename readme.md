@@ -44,5 +44,10 @@ Endpoint:
       "id": ID_OF_DEVICE
   }
   ```
+## Labb 2
+Go implementation of a COAP client.
+Supports GET, POST, PUT and DELETE request with a command line interface. After a request is sent it prints out the request message and response message in a human readable way
+GET creates a request to http://coap.me/test
+POST, PUT and DELETE creates a request to http://coap.me/sink
 ## TCPSocketC++
 TCP socket connection was planed to be HTTP server but moved to Golang. It is mostly C code
