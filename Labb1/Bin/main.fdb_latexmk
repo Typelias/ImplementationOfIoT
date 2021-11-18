@@ -1,12 +1,12 @@
 # Fdb version 3
-["biber Bin/main"] 1637074857 "Bin/main.bcf" "Bin/main.bbl" "Bin/main" 1637074976
-  "Bin/main.bcf" 1637074976 105707 75b8c320525a5eec0b64ed26161b28cc "pdflatex"
+["biber Bin/main"] 1637178609 "Bin/main.bcf" "Bin/main.bbl" "Bin/main" 1637178611
+  "Bin/main.bcf" 1637178611 105707 75b8c320525a5eec0b64ed26161b28cc "pdflatex"
   (generated)
   "Bin/main.blg"
   "Bin/main.bbl"
-["pdflatex"] 1637074975 "/Users/typelias/IoT/Labb1/main.tex" "/Users/typelias/IoT/Labb1/Bin/main.pdf" "main" 1637074976
-  "/Users/typelias/IoT/Labb1/Bin/main.aux" 1637074976 1076 7e2eea3dfe98253dce767ac9003b274e ""
-  "/Users/typelias/IoT/Labb1/main.tex" 1637074975 14255 5258a39ae05da68e38662a9d5b73b454 ""
+["pdflatex"] 1637178610 "/Users/typelias/IoT/Labb1/main.tex" "/Users/typelias/IoT/Labb1/Bin/main.pdf" "main" 1637178611
+  "/Users/typelias/IoT/Labb1/Bin/main.aux" 1637178611 1262 497a640121ba6d2f9504623352cce36e ""
+  "/Users/typelias/IoT/Labb1/main.tex" 1637178608 16757 1ca1cd25266349f22f332a64093bf8b5 ""
   "/usr/local/texlive/2021/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/local/texlive/2021/texmf-dist/fonts/tfm/public/cm/cmbx12.tfm" 1136768653 1324 c910af8c371558dc20f2d7822f66fe64 ""
   "/usr/local/texlive/2021/texmf-dist/fonts/tfm/public/cm/cmmi12.tfm" 1136768653 1524 4414a8315f39513458b80dfc63bff03a ""
@@ -98,15 +98,15 @@
   "/usr/local/texlive/2021/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1616695603 5169178 a2ce6e2d73f603b690db6777d06dbccb ""
   "/usr/local/texlive/2021/texmf-var/web2c/pdftex/pdflatex.fmt" 1636047783 2724739 63a6a2159bcc5f758a1e351fdd6e2608 ""
   "/usr/local/texlive/2021/texmf.cnf" 1616695596 577 4c1911a7228e554c6032256d3cf5567d ""
-  "Bin/main.aux" 1637074976 1076 7e2eea3dfe98253dce767ac9003b274e "pdflatex"
-  "Bin/main.bbl" 1637074858 0 d41d8cd98f00b204e9800998ecf8427e "biber Bin/main"
-  "Bin/main.run.xml" 1637074976 2257 73ae262a1ceda1228b370e3e8a571171 "pdflatex"
-  "main.tex" 1637074975 14255 5258a39ae05da68e38662a9d5b73b454 ""
+  "Bin/main.aux" 1637178611 1262 497a640121ba6d2f9504623352cce36e "pdflatex"
+  "Bin/main.bbl" 1637178610 0 d41d8cd98f00b204e9800998ecf8427e "biber Bin/main"
+  "Bin/main.run.xml" 1637178611 2257 6704e93977fe8f463c9134bf986fe44a "pdflatex"
+  "main.tex" 1637178608 16757 1ca1cd25266349f22f332a64093bf8b5 ""
   (generated)
-  "Bin/main.pdf"
-  "/Users/typelias/IoT/Labb1/Bin/main.pdf"
-  "/Users/typelias/IoT/Labb1/Bin/main.log"
   "Bin/main.bcf"
+  "Bin/main.aux"
+  "/Users/typelias/IoT/Labb1/Bin/main.log"
+  "Bin/main.pdf"
   "Bin/main.run.xml"
   "Bin/main.log"
-  "Bin/main.aux"
+  "/Users/typelias/IoT/Labb1/Bin/main.pdf"

@@ -70,15 +70,15 @@
 
     % Document starts here
     \section{Creating a message}
-    I created four different function for the different message types GET, POST, PUT, DELETE.
-    Each function takes a uri path and POST and PUT also take a payload as a string. It returns a byte array
+    I created four different functions for the different message types GET, POST, PUT, DELETE.
+    Each function takes a URI path and POST and PUT also take a payload as a string. It returns a byte array
     this array is the finished message. 
     \begin{lstlisting}[language=go]
 func createPut(path string, payload string) []byte
     \end{lstlisting}
     The first part of every function is the creation of the header.
     The process of creating the header is always the same for the given method.
-    Here we can se the creation process of a POST request:
+    Here we can see the creation process of a POST request:
     \begin{lstlisting} [language=go]
 ret := make([]byte, 0)
 firstByte := byte(0b01010000)
@@ -92,20 +92,20 @@ id = id[:2]
 ret = append(ret, id...)
     \end{lstlisting}
     The variable ret is the byte array that is returned. 
-    first byte creates the first byte of the message containing the version, message type and token leangth
-    In this case we have version 1, type 1 and token leangth 0.
-    I then append the the byte to ret.
+    first byte creates the first byte of the message containing the version, message type and token length
+    In this case we have version 1, type 1 and token length 0.
+    I then append the byte to ret.
 
     The variable code is next containing the method. This gets a value of 2 that is a POST message.
     This is then appended to the array.
 
-    The message id is always randomized. The smallest unsigned int that can be randomized in go is 32bits
-    long and thus is 4  bytes. So I first create a 4 byte long array and put the integer there and last i remove the 2 last bytes
+    The message id is always randomized. The smallest unsigned int that can be randomized in Go is 32bits
+    long and thus is 4 bytes. So, I first create a 4-byte long array and put the integer there and last, I remove the 2 last bytes
     creating a 2 byte long random int that is then appended to the array.
     As I do not include a token this is skipped
 
-    Next part is creating options. There is two options that is required first is the URI and then
-    the content type. I cretated a seprate function for this.
+    Next part is creating options. There are two options that is required first is the URI and then the content type. I created a separate function for this.
+
 \begin{lstlisting}[language=go]
 func createOption(name string, data []byte, lastDelta int) ([]byte, int) {
     switch name {
@@ -129,11 +129,11 @@ This function first takes the name of the option. Then it takes the option data 
 and lastly it takes the last delta from the previous option. I then have a switch case statement
 for creating the different options depending in the option name I took as input.
 The function returns the finished option as an array and an integer representing the last delta.
-The first thing I do is calcultate the option delta and bit shift it 4 times to move the 4 bits to the last 4 bits
-I then get the leangth of the option data and add that to the delta
-finally I return a byte array with the delta and option byte followed by the option data and the calcultated delta.
+The first thing I do is calculate the option delta and bit shift it 4 times to move the 4 bits to the last 4 bits
+I then get the length of the option data and add that to the delta
+finally, I return a byte array with the delta and option byte followed by the option data and the calculated delta.
 
-After the options are returned they are appended to the message array in creation function
+After the options are returned, they are appended to the message array in creation function
 for the message. Here is an example from the POST request:
 \begin{lstlisting}[language=go]
 lastDelta := 0
@@ -146,20 +146,73 @@ Here we can see the user input as both path and payload. They are a string but h
 them to byte arrays before sending them in to the createOption function. You can also see
 that the last delta starts at 0 and is overwritten by the returning int from the function.
 
-Lastly I append the deliminator and as we can see in the following code snippet it is FF in
-hexa deciaml and after that I append the payload thas is determined by the user input
-
+Lastly, I append the delimiter and as we can see in the following code snippet it is FF in
+hexa decimal and after that I append the payload thus is determined by the user input
 \begin{lstlisting}[language=go]
     ret = append(ret, byte(0xFF))
 	ret = append(ret, []byte(payload)...)
 \end{lstlisting}
-
 The other functions for GET, PUT and DELETE are similar, the difference is the method bits in the header
 and the fact that option and delete does not contain a payload.
-
 \section{Parse a message}
+To parse the message, I use two functions. One for parsing the message and one for parsing the options.
+For the main parsing function, I receive a byte array containing the message and the number of
+bytes it contains. I return an instance of a COAP message struct.
+\begin{lstlisting}[language=go]
+	message := COAPMessage{
+		Version:   int((arr[0] & 0b11000000) >> 6),
+		T:         int((arr[0] & 0b00110000) >> 4),
+		TKL:       int(arr[0] & 0b00001111),
+		Code:      int(arr[1]),
+		MessageID: int(binary.BigEndian.Uint16([]byte{arr[2], arr[3]})),
+	}
+\end{lstlisting}
+First, I create an instance of the message and assign the fixed values. I do this
+by doing an and on the byte with a bit string containing ones on the bits
+where the data I am interested in getting. I then shift the resulting bits to place
+them so their value is correct.
 
+When the set bits are done, I then try to find the delimiter byte (FF in hex).
+I store the value so I can take out the subset of bits containing the options.
+\begin{lstlisting}[language=go]
+var index int
+for i, b := range arr {
+	if b == 0xFF {
+		index = i
+	}
+}
+if index == 0 {
+	index = n
+}
+ \end{lstlisting}
+ If I do not find the delimiter, I set the index of the final bit of the options to
+ the end of the whole message because I know the rest of the message is only options.
 
+ If token length is 0 then I set the start of options to the fifth byte otherwise
+ I set it to the byte after token. I then send the subset of the array to a function
+ that decodes the options. In that function I start the delta on 0 and add to it with
+ every option and then save that to a struct representing an option. For now
+ I do nothing with the option data and just save as a byte array. 
+ \section{Printing the message}
+ The printing of a message is done by a void function taking an instance of the COAP
+ message class. 
+\begin{lstlisting}[language=go]
+func printCOAP(c COAPMessage) {
+	fmt.Println("Version:", c.Version, "Message Type:", c.T, "Token leangth:", c.TKL)
+	fmt.Println("Metod/Response:", "\""+parseMethodCode(c.Code)+"\"", "Message id:", c.MessageID)
+	fmt.Println("Token:", c.Token)
+	fmt.Println("Options:")
+	c.Format = printOptions(c.Options)
+	if c.Format != "text/plain" {
+		fmt.Println("FIX FORMAT")
+	} else {
+		fmt.Println("Payload:\n", "\t"+string(c.Payload))
+	}
+}
+\end{lstlisting}
+Helper functions help the main function handle options and converting identification
+number to human readable strings. The complete code can be found in Appendix \ref{appendix:code}
+ 
 
 
 
@@ -171,7 +224,7 @@ and the fact that option and delete does not contain a payload.
     \begin{appendices}
 
         \section{Code}
-        \label{appendix:A}
+        \label{appendix:code}
         \begin{lstlisting}[language=go]
             package main
 
