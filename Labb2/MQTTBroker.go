@@ -4,20 +4,12 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
+	"strconv"
 )
 
 var subscriptions map[string][]*net.Conn
 var lastValue map[string][]byte
 var DEVIDER string
-
-func Contains(a []string, x string) bool {
-	for _, n := range a {
-		if x == n {
-			return true
-		}
-	}
-	return false
-}
 
 type BroadCastMessage struct {
 	Topic   string
@@ -249,9 +241,17 @@ func handleConnection(c *net.Conn, ch chan BroadCastMessage, id string) {
 			}
 			break
 		default:
+			fmt.Println(DEVIDER)
+			fmt.Println("Got message type: " + strconv.Itoa(messageType))
+			fmt.Println("This is not handled by brooker")
+			if messageType == 0 {
+				fmt.Println("Message type 0 could be a forced disconect")
+			}
+			fmt.Println(DEVIDER)
+			fmt.Println()
 			removeAllSubs(c)
 			(*c).Close()
-			panic("Unsuported packet type")
+			return
 		}
 	}
 }
@@ -289,19 +289,7 @@ func acceptMessage(c *net.Conn, ch chan BroadCastMessage) {
 	if len(payload) > 0 {
 		id = string(payload)
 	}
-	// fmt.Println(string(payload))
 	handleConnection(c, ch, id)
-	// Nothing we care about
-	// fmt.Printf("%08b\n", message[7])
-	// fmt.Println(message[8:9])
-	// keepAlive := binary.BigEndian.Uint16(message[8:10])
-	// fmt.Println(keepAlive)
-	// var payload []byte
-	// if len(message) > 10 {
-	// 	payload = message[10:]
-	// }
-	// fmt.Println(string(payload))
-
 }
 
 func main() {

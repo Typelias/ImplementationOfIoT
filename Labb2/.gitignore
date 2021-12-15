@@ -1,0 +1,7 @@
+bin/*
+!bin/*.pdf
+*.synctex(busy)
+
+
+
+.DS_Store

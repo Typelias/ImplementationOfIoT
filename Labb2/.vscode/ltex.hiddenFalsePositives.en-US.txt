@@ -1,0 +1,2 @@
+{"rule":"A_INFINITIVE","sentence":"^\\QIt is important to keep in mind that a subscribe message can contain multiple topics and thus this needs to be checked.\\E$"}
+{"rule":"A_INFINITIVE","sentence":"^\\QIn figure \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q is the code for parsing a subscribe message.\\E$"}
