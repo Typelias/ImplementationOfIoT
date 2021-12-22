@@ -50,9 +50,11 @@ func parseMethodCode(c int) string {
 	case 68:
 		return "Changed"
 	case 69:
-		return "Continue"
+		return "Content"
 	case 132:
 		return "Not Found"
+	case 128:
+		return "Bad Request"
 	}
 
 	return "not in list: " + strconv.Itoa(c)
@@ -157,7 +159,7 @@ func parseMessage(arr []byte, n int) COAPMessage {
 	return message
 }
 
-func createGet(path string) []byte {
+func createGet(path string, payload string) []byte {
 	var ret []byte
 	firstByte := byte(0b01010000)
 	ret = append(ret, firstByte)
@@ -173,6 +175,8 @@ func createGet(path string) []byte {
 	ret = append(ret, option...)
 	option, _ = createOption("contentType", make([]byte, 0), lastDelta)
 	ret = append(ret, option...)
+	ret = append(ret, byte(0xFF))
+	ret = append(ret, []byte(payload)...)
 
 	return ret
 }
@@ -221,7 +225,7 @@ func createPut(path string, payload string) []byte {
 	return ret
 }
 
-func createDelete(path string) []byte {
+func createDelete(path string, payload string) []byte {
 	ret := make([]byte, 0)
 	firstByte := byte(0b01010000)
 	ret = append(ret, firstByte)
@@ -237,6 +241,8 @@ func createDelete(path string) []byte {
 	ret = append(ret, option...)
 	option, _ = createOption("contentType", make([]byte, 0), lastDelta)
 	ret = append(ret, option...)
+	ret = append(ret, byte(0xFF))
+	ret = append(ret, []byte(payload)...)
 
 	return ret
 }
@@ -279,7 +285,7 @@ func printCOAP(c COAPMessage) {
 }
 
 func sendCOAP(method string) {
-	conn, err := net.Dial("udp", "coap.me:5683")
+	conn, err := net.Dial("udp", "localhost:5683")
 	if err != nil {
 		panic(err)
 	}
@@ -289,7 +295,10 @@ func sendCOAP(method string) {
 	fmt.Scanln(&uri)
 	switch method {
 	case "GET":
-		msg = createGet(uri)
+		var payload string
+		fmt.Println("Type payload")
+		fmt.Scanln(&payload)
+		msg = createGet(uri, payload)
 		break
 	case "POST":
 		var payload string
@@ -304,7 +313,10 @@ func sendCOAP(method string) {
 		msg = createPut(uri, payload)
 		break
 	case "DELETE":
-		msg = createDelete(uri)
+		var payload string
+		fmt.Println("Type payload")
+		fmt.Scanln(&payload)
+		msg = createDelete(uri, payload)
 		break
 	default:
 		msg = make([]byte, 0)
