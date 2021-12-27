@@ -285,7 +285,7 @@ func printCOAP(c COAPMessage) {
 }
 
 func sendCOAP(method string) {
-	conn, err := net.Dial("udp", "localhost:5683")
+	conn, err := net.Dial("udp", "typelias.se:5683")
 	if err != nil {
 		panic(err)
 	}

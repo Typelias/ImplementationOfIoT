@@ -150,7 +150,7 @@ func main() {
 		data, _ := json.Marshal(thermostats)
 		w.SetResponse(codes.Content, message.TextPlain, bytes.NewReader(data))
 	}))
-
+	fmt.Println("started server on port 5683")
 	log.Fatal(coap.ListenAndServe("udp", ":5683", r))
 
 }
