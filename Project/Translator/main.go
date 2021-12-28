@@ -9,6 +9,9 @@ import (
 	"os/exec"
 	"strconv"
 	"time"
+
+	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/tidwall/gjson"
 )
 
 //40 01 04 d2 b4 74 65 73 74
@@ -350,7 +353,30 @@ func sendCOAP(method string) {
 
 }
 
-func main() {
+func sendCreatedCoap(message []byte) []byte {
+	conn, err := net.Dial("udp", "typelias.se:5683")
+	if err != nil {
+		panic(err)
+	}
+	n, err := conn.Write(message)
+	if err != nil {
+		panic(err)
+	}
+	response := make([]byte, 1024)
+	n, err = conn.Read(response)
+	if err != nil {
+		panic(err)
+	}
+	response = response[:n]
+	// fmt.Print("\n")
+	// fmt.Println("Got following response:")
+	// fmt.Println("------------------------------------------------")
+	// printCOAP(parseMessage(response, n))
+	// fmt.Println("------------------------------------------------")
+	return parseMessage(response, n).Payload
+}
+
+func standardCOAP() {
 	rand.Seed(time.Now().UnixMicro())
 	var option string
 	run := true
@@ -379,4 +405,117 @@ func main() {
 		}
 		option = ""
 	}
+}
+
+func allCallback(c mqtt.Client, m mqtt.Message) {
+	message := string(m.Payload())
+	fmt.Println(message)
+
+	if message == "GET" {
+		COAPmsg := createGet("all", "")
+		payload := string(sendCreatedCoap(COAPmsg))
+		fmt.Println(payload)
+		tok := c.Publish("all", 0, false, payload)
+		tok.Wait()
+	}
+}
+
+func addCallback(c mqtt.Client, m mqtt.Message) {
+	message := string(m.Payload())
+	msg := createPost("temp", message)
+	payload := string(sendCreatedCoap(msg))
+	fmt.Print(payload)
+	populateSensors()
+}
+
+func changeCallback(c mqtt.Client, m mqtt.Message) {
+	message := string(m.Payload())
+	msg := createPut("temp", message)
+	payload := string(sendCreatedCoap(msg))
+	fmt.Print(payload)
+	populateSensors()
+}
+
+func deleteCallback(c mqtt.Client, m mqtt.Message) {
+	message := string(m.Payload())
+	msg := createDelete("temp", message)
+	payload := string(sendCreatedCoap(msg))
+	fmt.Print(payload)
+}
+
+var messagePubHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
+	fmt.Printf("Received message: %s from topic: %s\n", msg.Payload(), msg.Topic())
+}
+
+var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
+	fmt.Println("Connected")
+}
+
+var connectLostHandler mqtt.ConnectionLostHandler = func(client mqtt.Client, err error) {
+	fmt.Printf("Connect lost: %v", err)
+}
+
+var sensors map[string]bool
+
+func populateSensors() {
+	sensors = make(map[string]bool)
+	COAPmsg := createGet("all", "")
+	payload := string(sendCreatedCoap(COAPmsg))
+	fmt.Println(payload)
+	json := gjson.Parse(payload)
+	json.ForEach(func(key, val gjson.Result) bool {
+		fmt.Println(val.Str)
+		sensors[key.Str] = val.Get("Status").Bool()
+		return true
+	})
+	fmt.Println("Updated sensros")
+	fmt.Println(sensors)
+}
+
+func main() {
+	//standardCOAP()
+	populateSensors()
+	var broker = "localhost"
+	var port = 1883
+	opts := mqtt.NewClientOptions()
+	opts.AddBroker(fmt.Sprintf("tcp://%s:%d", broker, port))
+	opts.SetClientID("go_mqtt_client")
+
+	opts.SetDefaultPublishHandler(messagePubHandler)
+	opts.OnConnect = connectHandler
+	opts.OnConnectionLost = connectLostHandler
+	opts.SetPingTimeout(time.Second * 60)
+
+	client := mqtt.NewClient(opts)
+
+	if token := client.Connect(); token.Wait() && token.Error() != nil {
+		panic(token.Error())
+	}
+	tok := client.Subscribe("all", 0, allCallback)
+
+	tok.Wait()
+
+	tok = client.Subscribe("home/add", 0, addCallback)
+	tok.Wait()
+
+	tok = client.Subscribe("home/change", 0, changeCallback)
+	tok.Wait()
+
+	tok = client.Subscribe("home/delete", 0, deleteCallback)
+	tok.Wait()
+
+	for {
+		// for k, online := range sensors {
+		// 	if online {
+		// 		msg := createGet("temp", k)
+		// 		p := sendCreatedCoap(msg)
+		// 		tok = client.Publish("home/"+k, 0, true, p)
+		// 		tok.Wait()
+		// 	}
+
+		// }
+		time.Sleep(time.Second * 10)
+
+	}
+
 }

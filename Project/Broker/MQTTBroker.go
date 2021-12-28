@@ -152,7 +152,6 @@ func parsePublish(message []byte, retain bool, id string) (string, string) {
 	data := ""
 	topic := ""
 	var topicLenBytes []byte
-
 	topicLenBytes, message = message[:2], message[2:]
 	topicLength := binary.BigEndian.Uint16(topicLenBytes)
 	topic, message = string(message[:topicLength]), message[topicLength:]
@@ -218,7 +217,40 @@ func handleConnection(c *net.Conn, ch chan BroadCastMessage, id string) {
 			(*c).Write(createUnsubAck(parseUnsubscribe(messageArr, c, id)))
 			break
 		case 3: // Publish
-			remainder := int(constHEAD[1])
+			originalPacket := constHEAD
+			isSet := int(constHEAD[1] & 0b10000000 >> 7)
+			var remainder int
+			var bitString string
+			if isSet == 1 {
+				bitString = fmt.Sprintf("%08b", constHEAD[1]&0b01111111)
+				bitString = bitString[1:]
+				buf := make([]byte, 1)
+				(*c).Read(buf)
+				originalPacket = append(originalPacket, buf...)
+				isSet = int(buf[0] & 0b10000000 >> 7)
+				if isSet == 1 {
+					bitString = fmt.Sprintf("%08b", buf[0]&0b01111111) + bitString
+					bitString = bitString[1:]
+					(*c).Read(buf)
+					originalPacket = append(originalPacket, buf...)
+					isSet = int(buf[0] & 0b10000000 >> 7)
+					if isSet == 1 {
+
+					} else {
+						bitString = fmt.Sprintf("%08b", buf[0]&0b01111111) + bitString
+						bitString = bitString[1:]
+					}
+
+				} else {
+					bitString = fmt.Sprintf("%08b", buf[0]&0b01111111) + bitString
+					bitString = bitString[1:]
+				}
+				temp, _ := strconv.ParseInt(bitString, 2, 64)
+				remainder = int(temp)
+
+			} else {
+				remainder = int(constHEAD[1])
+			}
 			messageArr := make([]byte, remainder)
 			retain := int(constHEAD[0] & 0b00000001)
 			qos := int((constHEAD[0] & 0b00000110) >> 1)
@@ -233,11 +265,11 @@ func handleConnection(c *net.Conn, ch chan BroadCastMessage, id string) {
 			ch <- BroadCastMessage{
 				Message: data,
 				Topic:   topic,
-				Packet:  append(constHEAD, messageArr...),
+				Packet:  append(originalPacket, messageArr...),
 			}
 			if retain != 0 {
 				lastValue[topic] = append(lastValue[topic],
-					append(constHEAD, messageArr...)...)
+					append(originalPacket, messageArr...)...)
 			}
 			break
 		default:
@@ -275,11 +307,6 @@ func acceptMessage(c *net.Conn, ch chan BroadCastMessage) {
 	if mqttString != "MQTT" {
 		(*c).Close()
 		panic("Wring protocoll")
-	}
-
-	version := message[6]
-	if version != 4 {
-		panic("Protocoll not supported")
 	}
 	var payload []byte
 	if len(message) > 10 {
