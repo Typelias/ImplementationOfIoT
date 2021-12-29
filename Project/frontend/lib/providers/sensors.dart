@@ -41,9 +41,11 @@ class SensorProvider with ChangeNotifier {
 
     try {
       await client.connect();
-      subscribe("all");
+      subscribe("all/resp");
       subscribe("home/change");
       subscribe("home/delete");
+      subscribe("pi/cpu");
+      subscribe("pi/mem");
       return true;
     } catch (e) {
       print("Conection failed");
@@ -70,10 +72,31 @@ class SensorProvider with ChangeNotifier {
     client.publishMessage("all", MqttQos.atMostOnce, builder.payload!);
   }
 
+  final List<Duration> b = [];
+  final Mutex bench = Mutex();
+  bool runningBenchmark = false;
+  DateTime lastStartTime = DateTime.now();
+
+  Future<List<Duration>> benchmark(int runs) async {
+    runningBenchmark = true;
+    if (bench.isLocked) bench.release();
+    b.clear();
+    for (var i = 0; i < runs; i++) {
+      await bench.acquire();
+      print("run");
+      lastStartTime = DateTime.now();
+      final builder = MqttClientPayloadBuilder();
+      builder.addString("GET");
+      client.publishMessage("all", MqttQos.atMostOnce, builder.payload!);
+    }
+    runningBenchmark = false;
+    return b;
+  }
+
   void subscribHandler(List<MqttReceivedMessage<MqttMessage>> list) {
     for (var element in list) {
       switch (element.topic) {
-        case "all":
+        case "all/resp":
           handleAll(element);
           break;
         default:
@@ -83,12 +106,37 @@ class SensorProvider with ChangeNotifier {
               return;
             }
             handleTemperatureChange(element);
+          } else if (element.topic.contains("pi/")) {
+            final splitLen = element.topic.split("/").length;
+            if (splitLen != 2) {
+              return;
+            }
+            handlePi(element);
           }
           break;
       }
     }
   }
 
+  void handlePi(MqttReceivedMessage<MqttMessage> msg) {
+    final info = msg.topic.split("/")[1];
+    switch (info) {
+      case "cpu":
+        final MqttPublishMessage conv = msg.payload as MqttPublishMessage;
+        final payload =
+            MqttPublishPayload.bytesToStringAsString(conv.payload.message);
+        _cpuList.add(payload);
+        break;
+      case "mem":
+        final MqttPublishMessage conv = msg.payload as MqttPublishMessage;
+        final payload =
+            MqttPublishPayload.bytesToStringAsString(conv.payload.message);
+        _memUsage = payload;
+        break;
+    }
+  }
+
+// #region Handle temp call
   Future<void> handleTemperatureChange(
       MqttReceivedMessage<MqttMessage> msg) async {
     await Future.delayed(const Duration(seconds: 1));
@@ -97,7 +145,6 @@ class SensorProvider with ChangeNotifier {
     final MqttPublishMessage conv = msg.payload as MqttPublishMessage;
     final payload =
         MqttPublishPayload.bytesToStringAsString(conv.payload.message);
-    //print("Recived temperature change");
     final index =
         _sensorList.indexWhere((element) => element.Location == sensorLocation);
     if (index == -1) {
@@ -105,21 +152,28 @@ class SensorProvider with ChangeNotifier {
       notifyListeners();
       return;
     }
-    // print(sensorLocation + "\t" + payload);
-    int meme = 0;
+    int p = 0;
     try {
-      meme = int.parse(payload);
+      p = int.parse(payload);
     } catch (e) {
       m.release();
       return;
     }
-    _sensorList[index] =
-        Sensor(_sensorList[index].Status, int.parse(payload), sensorLocation);
+    _sensorList[index] = Sensor(_sensorList[index].Status, p, sensorLocation);
     m.release();
     notifyListeners();
   }
+// #endregion
 
+// #region Handle All sub
   void handleAll(MqttReceivedMessage<MqttMessage> input) {
+    if (runningBenchmark) {
+      final stopTime = DateTime.now();
+      final dur = stopTime.difference(lastStartTime);
+      b.add(dur);
+      bench.release();
+      return;
+    }
     final MqttPublishMessage msg = input.payload as MqttPublishMessage;
     final x = MqttPublishPayload.bytesToStringAsString(msg.payload.message);
     if (x == "GET") {
@@ -127,34 +181,29 @@ class SensorProvider with ChangeNotifier {
     }
     populateList(x);
   }
+// #endregion
 
-//#region
-  // connection succeeded
+// #region
   void onConnected() {
     print('Connected');
   }
 
-// unconnected
   void onDisconnected() {
     print('Disconnected');
   }
 
-// subscribe to topic succeeded
   void onSubscribed(String topic) {
     print('Subscribed topic: $topic');
   }
 
-// subscribe to topic failed
   void onSubscribeFail(String topic) {
     print('Failed to subscribe $topic');
   }
 
-// unsubscribe succeeded
   void onUnsubscribed(String topic) {
     print('Unsubscribed topic: $topic');
   }
 
-// PING response received
   void pong() {
     print('Ping response client callback invoked');
   }
@@ -163,8 +212,7 @@ class SensorProvider with ChangeNotifier {
     client.disconnect();
   }
 
-//#endregion
-
+// #endregion
   bool isConnected() {
     return client.connectionStatus!.state == MqttConnectionState.connected;
   }
@@ -172,8 +220,12 @@ class SensorProvider with ChangeNotifier {
   /*Provider part*/
 
   final List<Sensor> _sensorList = [];
+  final List<String> _cpuList = [];
+  String _memUsage = "";
 
   List<Sensor> get sensors => _sensorList;
+  List<String> get cpu => _cpuList;
+  String get mem => _memUsage;
 
   void populateList(String jsonData) {
     _sensorList.clear();

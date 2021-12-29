@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/helpers/mqtt.dart';
 import 'package:frontend/providers/sensors.dart';
 import 'package:frontend/widgets/addSensorDialog.dart';
 import 'package:frontend/widgets/sensorGrid.dart';
@@ -40,11 +39,70 @@ class _HomeScreenState extends State<HomeScreen> {
         });
   }
 
+  Widget getResult(List<Duration> l) {
+    int totalTime = 0;
+    l.forEach((element) {
+      totalTime += element.inMilliseconds;
+    });
+    final avg = (totalTime / l.length) / 1000;
+    l.sort((el1, el2) => el1.inMilliseconds.compareTo(el2.inMilliseconds));
+    final min = l.first.inMilliseconds / 1000;
+    final max = l.last.inMilliseconds / 1000;
+    // print(l.first.inMilliseconds / 1000);
+    // print(l.last.inMilliseconds / 1000);
+    // print(avg);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          children: [const Text("Average"), Text(avg.toStringAsFixed(3) + "s")],
+        ),
+        Column(
+          children: [const Text("Max"), Text(max.toStringAsFixed(3) + "s")],
+        ),
+        Column(
+          children: [const Text("Min"), Text(min.toStringAsFixed(3) + "s")],
+        )
+      ],
+    );
+  }
+
+  void runBench() {
+    showCupertinoDialog(
+        context: context,
+        builder: (ctx) => CupertinoAlertDialog(
+              title: const Text("Benchmark"),
+              content: FutureBuilder(
+                future: Provider.of<SensorProvider>(ctx, listen: false)
+                    .benchmark(100),
+                builder: (context, snapshot) {
+                  return snapshot.connectionState == ConnectionState.waiting
+                      ? const Text("Running benchmark")
+                      : getResult(snapshot.data as List<Duration>);
+                },
+              ),
+              actions: [
+                CupertinoDialogAction(
+                  child: const Text("Close"),
+                  onPressed: () {
+                    if (Provider.of<SensorProvider>(ctx, listen: false)
+                        .runningBenchmark) return;
+                    Navigator.of(ctx).pop();
+                  },
+                )
+              ],
+            ));
+  }
+
   @override
   Widget build(BuildContext context) {
     final mqtt = Provider.of<SensorProvider>(context, listen: false);
     return CupertinoPageScaffold(
         navigationBar: CupertinoNavigationBar(
+          leading: CupertinoButton(
+            child: const Icon(Icons.run_circle),
+            onPressed: runBench,
+          ),
           middle: const Text("Home Temperatures"),
           trailing: CupertinoButton(
             child: const Icon(CupertinoIcons.add),

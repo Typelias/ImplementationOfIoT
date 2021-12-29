@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -415,7 +416,7 @@ func allCallback(c mqtt.Client, m mqtt.Message) {
 		COAPmsg := createGet("all", "")
 		payload := string(sendCreatedCoap(COAPmsg))
 		fmt.Println(payload)
-		tok := c.Publish("all", 0, false, payload)
+		tok := c.Publish("all/resp", 0, false, payload)
 		tok.Wait()
 	}
 }
@@ -514,6 +515,13 @@ func main() {
 			}
 
 		}
+		msg := createGet("pi", "")
+		p := sendCreatedCoap(msg)
+		//fmt.Println(string(p))
+		tok = client.Publish("pi/cpu", 0, true, strings.Split(string(p), ":")[0])
+		tok.Wait()
+		tok = client.Publish("pi/mem", 0, true, strings.Split(string(p), ":")[1])
+		tok.Wait()
 		time.Sleep(time.Second * 10)
 
 	}
