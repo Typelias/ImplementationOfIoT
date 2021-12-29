@@ -86,8 +86,8 @@ func handleTemp(w mux.ResponseWriter, r *mux.Message) {
 		}
 		if sensor.Status {
 			w.SetResponse(codes.Content, message.TextPlain, bytes.NewReader([]byte(strconv.Itoa(sensor.Temperature))))
-			r := rand.Intn(2-1) + 1
-			change := rand.Intn(3-1) + 1
+			r := rand.Intn(3-1) + 1
+			change := rand.Intn(4-1) + 1
 			if r == 1 {
 				sensor.Temperature = sensor.Temperature - change
 			} else {
