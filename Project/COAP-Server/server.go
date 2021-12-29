@@ -86,7 +86,14 @@ func handleTemp(w mux.ResponseWriter, r *mux.Message) {
 		}
 		if sensor.Status {
 			w.SetResponse(codes.Content, message.TextPlain, bytes.NewReader([]byte(strconv.Itoa(sensor.Temperature))))
-			sensor.Temperature = rand.Intn(max-min) + min
+			r := rand.Intn(2-1) + 1
+			change := rand.Intn(3-1) + 1
+			if r == 1 {
+				sensor.Temperature = sensor.Temperature - change
+			} else {
+				sensor.Temperature = sensor.Temperature + change
+			}
+			//sensor.Temperature = rand.Intn(max-min) + min
 			thermostats[string(body)] = sensor
 		} else {
 			w.SetResponse(codes.Content, message.TextPlain, bytes.NewReader([]byte("Sensor is offline")))
