@@ -295,7 +295,8 @@ func acceptMessage(c *net.Conn, ch chan BroadCastMessage) {
 	remainder := int(constHEAD[1])
 	print(packetType)
 	if packetType != 1 {
-		panic("Not a connection")
+		(*c).Close()
+		return
 	}
 	message := make([]byte, remainder)
 	(*c).Read(message)

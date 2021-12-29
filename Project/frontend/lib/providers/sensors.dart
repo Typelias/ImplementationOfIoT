@@ -24,7 +24,7 @@ class Sensor {
 class SensorProvider with ChangeNotifier {
   /* MQTT client part */
   MqttServerClient client =
-      MqttServerClient.withPort("localhost", "Flutter", 1883);
+      MqttServerClient.withPort("typelias.se", "Flutter", 1883);
 
   final m = Mutex();
 

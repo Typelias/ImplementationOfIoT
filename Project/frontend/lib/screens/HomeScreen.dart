@@ -6,7 +6,7 @@ import 'package:frontend/widgets/sensorGrid.dart';
 import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
-  HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({Key? key}) : super(key: key);
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -41,9 +41,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget getResult(List<Duration> l) {
     int totalTime = 0;
-    l.forEach((element) {
+    for (var element in l) {
       totalTime += element.inMilliseconds;
-    });
+    }
     final avg = (totalTime / l.length) / 1000;
     l.sort((el1, el2) => el1.inMilliseconds.compareTo(el2.inMilliseconds));
     final min = l.first.inMilliseconds / 1000;

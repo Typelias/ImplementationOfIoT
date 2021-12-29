@@ -16,9 +16,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<SensorProvider>(
       create: (_) => SensorProvider(),
-      child: CupertinoApp(
+      child: const CupertinoApp(
         title: 'IoT temp',
-        theme: const CupertinoThemeData(
+        theme: CupertinoThemeData(
           primaryColor: Colors.white,
           brightness: Brightness.dark,
         ),
