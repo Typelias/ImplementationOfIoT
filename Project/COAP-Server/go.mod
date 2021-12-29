@@ -5,6 +5,7 @@ go 1.17
 require github.com/plgd-dev/go-coap/v2 v2.4.0
 
 require (
+	github.com/c9s/goprocinfo v0.0.0-20210130143923-c95fcf8c64a8 // indirect
 	github.com/dsnet/golib/memfile v0.0.0-20200723050859-c110804dfa93 // indirect
 	github.com/go-ocf/go-coap v0.0.0-20200511140640-db6048acfdd3 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
