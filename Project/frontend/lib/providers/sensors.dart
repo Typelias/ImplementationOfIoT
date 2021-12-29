@@ -100,6 +100,7 @@ class SensorProvider with ChangeNotifier {
           handleAll(element);
           break;
         default:
+          if (runningBenchmark) return;
           if (element.topic.contains("home/")) {
             final splitLen = element.topic.split("/").length;
             if (splitLen != 2) {
