@@ -22,6 +22,8 @@ class MQTTClient {
     try {
       await client.connect();
       subscribe("all");
+      subscribe("home/change");
+      subscribe("home/delete");
       return true;
     } catch (e) {
       print("Conection failed");
@@ -33,20 +35,35 @@ class MQTTClient {
     client.subscribe(topic, MqttQos.atMostOnce);
   }
 
+  void publish(String message) {}
+
   Future<void> init() async {
     //client.subscribe("all", MqttQos.atMostOnce);
-    await Future<void>.delayed(const Duration(seconds: 2));
-    client.updates?.listen((list) {
-      for (var element in list) {
-        print(element.topic);
-        final MqttPublishMessage msg = element.payload as MqttPublishMessage;
-        final x = MqttPublishPayload.bytesToStringAsString(msg.payload.message);
-        print(x);
-      }
-    });
+    //await Future<void>.delayed(const Duration(seconds: 2));
+    client.updates?.listen(subscribHandler);
     final builder = MqttClientPayloadBuilder();
     builder.addString("GET");
     client.publishMessage("all", MqttQos.atMostOnce, builder.payload!);
+  }
+
+  void subscribHandler(List<MqttReceivedMessage<MqttMessage>> list) {
+    for (var element in list) {
+      switch (element.topic) {
+        case "all":
+          handleAll(element);
+          break;
+      }
+    }
+  }
+
+  void handleAll(MqttReceivedMessage<MqttMessage> input) {
+    final MqttPublishMessage msg = input.payload as MqttPublishMessage;
+    final x = MqttPublishPayload.bytesToStringAsString(msg.payload.message);
+    if (x == "GET") {
+      return;
+    }
+    print(input.topic);
+    print(x);
   }
 
   // connection succeeded

@@ -293,6 +293,7 @@ func acceptMessage(c *net.Conn, ch chan BroadCastMessage) {
 	(*c).Read(constHEAD)
 	packetType := int((constHEAD[0] & 0b11110000) >> 4)
 	remainder := int(constHEAD[1])
+	print(packetType)
 	if packetType != 1 {
 		panic("Not a connection")
 	}

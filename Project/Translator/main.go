@@ -479,7 +479,7 @@ func main() {
 	var port = 1883
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(fmt.Sprintf("tcp://%s:%d", broker, port))
-	opts.SetClientID("go_mqtt_client")
+	opts.SetClientID("Coap Translator")
 
 	opts.SetDefaultPublishHandler(messagePubHandler)
 	opts.OnConnect = connectHandler
@@ -505,15 +505,15 @@ func main() {
 	tok.Wait()
 
 	for {
-		// for k, online := range sensors {
-		// 	if online {
-		// 		msg := createGet("temp", k)
-		// 		p := sendCreatedCoap(msg)
-		// 		tok = client.Publish("home/"+k, 0, true, p)
-		// 		tok.Wait()
-		// 	}
+		for k, online := range sensors {
+			if online {
+				msg := createGet("temp", k)
+				p := sendCreatedCoap(msg)
+				tok = client.Publish("home/"+k, 0, true, p)
+				tok.Wait()
+			}
 
-		// }
+		}
 		time.Sleep(time.Second * 10)
 
 	}

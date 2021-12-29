@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/helpers/mqtt.dart';
 import 'package:frontend/providers/sensors.dart';
+import 'package:frontend/widgets/addSensorDialog.dart';
 import 'package:frontend/widgets/sensorGrid.dart';
 import 'package:provider/provider.dart';
 
@@ -13,16 +14,10 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  MQTTClient client = MQTTClient();
   bool initialState = true;
 
-  @override
-  void dispose() {
-    client.client.disconnect();
-    super.dispose();
-  }
-
-  Widget init() {
+  Widget init(BuildContext context) {
+    final mqtt = Provider.of<SensorProvider>(context, listen: false);
     return FutureBuilder<void>(
       builder: (ctx, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -30,10 +25,10 @@ class _HomeScreenState extends State<HomeScreen> {
             child: CircularProgressIndicator(),
           );
         }
-        Provider.of<SensorProvider>(context, listen: false).populateList("");
-        return SensorGrid();
+        //Provider.of<SensorProvider>(context, listen: false).populateList("");
+        return const SensorGrid();
       },
-      future: client.init(),
+      future: mqtt.init(),
     );
   }
 
@@ -41,68 +36,29 @@ class _HomeScreenState extends State<HomeScreen> {
     showCupertinoDialog(
         context: context,
         builder: (ctx) {
-          return StatefulBuilder(builder: (context, setState) {
-            return CupertinoAlertDialog(
-              title: const Text("Add sensor"),
-              content: Column(
-                children: [
-                  const CupertinoTextField(
-                    placeholder: "location",
-                    keyboardType: TextInputType.name,
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        "Power status: ",
-                        textScaleFactor: 1.5,
-                      ),
-                      CupertinoSwitch(
-                          value: initialState,
-                          onChanged: (val) => setState(() {
-                                initialState = !initialState;
-                              })),
-                    ],
-                  ),
-                ],
-              ),
-              actions: [
-                CupertinoDialogAction(
-                  child: const Text("Close"),
-                  onPressed: () => Navigator.of(context).pop(),
-                  isDestructiveAction: true,
-                ),
-                CupertinoDialogAction(
-                  child: const Text("Add"),
-                  onPressed: () {},
-                ),
-              ],
-            );
-          });
+          return const AddSensorDialog();
         });
   }
 
   @override
   Widget build(BuildContext context) {
+    final mqtt = Provider.of<SensorProvider>(context, listen: false);
     return CupertinoPageScaffold(
         navigationBar: CupertinoNavigationBar(
-          middle: const Text("My app"),
+          middle: const Text("Home Temperatures"),
           trailing: CupertinoButton(
             child: const Icon(CupertinoIcons.add),
             onPressed: openAdd,
           ),
         ),
         child: FutureBuilder<bool>(
-          future: client.connect(),
+          future: mqtt.connect(),
           builder: (ctx, snapshot) {
             return snapshot.connectionState == ConnectionState.waiting
                 ? const Center(
                     child: CircularProgressIndicator(),
                   )
-                : init();
+                : init(ctx);
           },
         ));
   }
