@@ -55,6 +55,7 @@ class SensorProvider with ChangeNotifier {
       subscribe("all/$devId");
       subscribe("home/change");
       subscribe("home/delete");
+      subscribe("home/add");
       subscribe("pi/cpu");
       subscribe("pi/mem");
       return true;
@@ -107,8 +108,15 @@ class SensorProvider with ChangeNotifier {
       if (element.topic == "all/$devId") {
         handleAll(element);
       } else if (element.topic.contains("home/")) {
-        final splitLen = element.topic.split("/").length;
+        final split = element.topic.split("/");
+        final splitLen = split.length;
         if (splitLen != 2) {
+          return;
+        }
+        if (split.last == "add" ||
+            split.last == "change" ||
+            split.last == "delete") {
+          reload();
           return;
         }
         handleTemperatureChange(element);
@@ -120,6 +128,12 @@ class SensorProvider with ChangeNotifier {
         handlePi(element);
       }
     }
+  }
+
+  void reload() {
+    final builder = MqttClientPayloadBuilder();
+    builder.addString("GET:$devId");
+    client.publishMessage("all", MqttQos.atMostOnce, builder.payload!);
   }
 
   void handlePi(MqttReceivedMessage<MqttMessage> msg) {
