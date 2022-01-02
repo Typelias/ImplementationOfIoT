@@ -3,12 +3,11 @@
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 import 'package:mutex/mutex.dart';
 import 'package:uuid/uuid.dart';
-import 'package:uuid/uuid_util.dart';
 
 class Sensor {
   final bool Status;
@@ -25,9 +24,8 @@ class Sensor {
 
 class SensorProvider with ChangeNotifier {
   /* MQTT client part */
-  MqttServerClient client =
-      MqttServerClient.withPort("typelias.se", "Flutter", 1883);
-
+  late MqttClient client;
+  //MqttServerClient.withPort("typelias.se", "Flutter", 1883) as MQTTClient;
   final m = Mutex();
   late final Uuid uuid;
   late final String devId;
@@ -35,7 +33,7 @@ class SensorProvider with ChangeNotifier {
   SensorProvider() {
     uuid = Uuid();
     devId = uuid.v4();
-    print(devId);
+    client = MqttServerClient.withPort("typelias.se", "Flutter", 1883);
   }
 
   Future<bool> connect() async {
@@ -86,11 +84,13 @@ class SensorProvider with ChangeNotifier {
   final Mutex bench = Mutex();
   bool runningBenchmark = false;
   DateTime lastStartTime = DateTime.now();
+  int totalTime = 1;
 
   Future<List<Duration>> benchmark(int runs) async {
     runningBenchmark = true;
     if (bench.isLocked) bench.release();
     b.clear();
+    final benchStart = DateTime.now();
     for (var i = 0; i < runs; i++) {
       await bench.acquire();
       print("run: $i");
@@ -100,6 +100,8 @@ class SensorProvider with ChangeNotifier {
       client.publishMessage("all", MqttQos.atMostOnce, builder.payload!);
     }
     runningBenchmark = false;
+    totalTime = DateTime.now().difference(benchStart).inMilliseconds;
+
     return b;
   }
 
@@ -187,7 +189,7 @@ class SensorProvider with ChangeNotifier {
   void handleAll(MqttReceivedMessage<MqttMessage> input) {
     if (runningBenchmark) {
       final stopTime = DateTime.now();
-      final dur = stopTime.difference(lastStartTime);
+      final dur = stopTime.difference(lastStartTime).abs();
       b.add(dur);
       bench.release();
       return;

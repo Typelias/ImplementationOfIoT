@@ -1,0 +1,1 @@
+{"rule":"MORFOLOGIK_RULE_EN_US","sentence":"^\\QThe user application will be developed using Flutter and will use a Dart library written by Steve Hamblett \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q.\\E$"}

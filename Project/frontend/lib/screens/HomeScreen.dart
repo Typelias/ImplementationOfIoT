@@ -48,18 +48,40 @@ class _HomeScreenState extends State<HomeScreen> {
     l.sort((el1, el2) => el1.inMilliseconds.compareTo(el2.inMilliseconds));
     final min = l.first.inMilliseconds / 1000;
     final max = l.last.inMilliseconds / 1000;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+    final reqPerSec = l.length /
+        (Provider.of<SensorProvider>(context, listen: false).totalTime / 1000);
+    return Column(
       children: [
-        Column(
-          children: [const Text("Average"), Text(avg.toStringAsFixed(3) + "s")],
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Column(
+              children: [
+                const Text("Request/Second"),
+                Text(reqPerSec.toStringAsFixed(3))
+              ],
+            )
+          ],
         ),
-        Column(
-          children: [const Text("Max"), Text(max.toStringAsFixed(3) + "s")],
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              children: [
+                const Text("Average"),
+                Text(avg.toStringAsFixed(3) + "s")
+              ],
+            ),
+            Column(
+              children: [const Text("Max"), Text(max.toStringAsFixed(3) + "s")],
+            ),
+            Column(
+              children: [const Text("Min"), Text(min.toStringAsFixed(3) + "s")],
+            )
+          ],
         ),
-        Column(
-          children: [const Text("Min"), Text(min.toStringAsFixed(3) + "s")],
-        )
       ],
     );
   }
@@ -70,8 +92,9 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (ctx) => CupertinoAlertDialog(
               title: const Text("Benchmark"),
               content: FutureBuilder(
+                //BENCHMARK
                 future: Provider.of<SensorProvider>(ctx, listen: false)
-                    .benchmark(100000),
+                    .benchmark(10000),
                 builder: (context, snapshot) {
                   return snapshot.connectionState == ConnectionState.waiting
                       ? const Text("Running benchmark")
