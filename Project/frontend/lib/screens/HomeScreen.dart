@@ -48,9 +48,6 @@ class _HomeScreenState extends State<HomeScreen> {
     l.sort((el1, el2) => el1.inMilliseconds.compareTo(el2.inMilliseconds));
     final min = l.first.inMilliseconds / 1000;
     final max = l.last.inMilliseconds / 1000;
-    // print(l.first.inMilliseconds / 1000);
-    // print(l.last.inMilliseconds / 1000);
-    // print(avg);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -74,7 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
               title: const Text("Benchmark"),
               content: FutureBuilder(
                 future: Provider.of<SensorProvider>(ctx, listen: false)
-                    .benchmark(10),
+                    .benchmark(100000),
                 builder: (context, snapshot) {
                   return snapshot.connectionState == ConnectionState.waiting
                       ? const Text("Running benchmark")

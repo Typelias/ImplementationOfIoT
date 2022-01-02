@@ -89,8 +89,14 @@ func handleTemp(w mux.ResponseWriter, r *mux.Message) {
 			r := rand.Intn(3-1) + 1
 			change := rand.Intn(4-1) + 1
 			if r == 1 {
+				if sensor.Temperature < -25 {
+					sensor.Temperature = sensor.Temperature + change
+				}
 				sensor.Temperature = sensor.Temperature - change
 			} else {
+				if sensor.Temperature > 25 {
+					sensor.Temperature = sensor.Temperature - change
+				}
 				sensor.Temperature = sensor.Temperature + change
 			}
 			//sensor.Temperature = rand.Intn(max-min) + min

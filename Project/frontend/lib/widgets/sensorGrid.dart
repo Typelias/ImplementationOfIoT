@@ -36,17 +36,20 @@ class SensorGrid extends StatelessWidget {
           children: [
             Card(
               color: Colors.white10,
-              child: GridTile(
-                header: const Text(
-                  "CPU usage",
-                  style: TextStyle(color: Colors.white60),
-                  textScaleFactor: 1.5,
-                  textAlign: TextAlign.center,
-                ),
-                child: GridTileBar(
-                  subtitle: Text(
-                    sensorData.cpu.isEmpty ? "0%" : sensorData.cpu.last,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: GridTile(
+                  header: const Text(
+                    "CPU usage",
+                    style: TextStyle(color: Colors.white60),
+                    textScaleFactor: 1.5,
                     textAlign: TextAlign.center,
+                  ),
+                  child: GridTileBar(
+                    subtitle: Text(
+                      sensorData.cpu.isEmpty ? "0%" : sensorData.cpu.last,
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
               ),
