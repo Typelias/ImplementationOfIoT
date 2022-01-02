@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 import 'package:mutex/mutex.dart';
+import 'package:uuid/uuid.dart';
+import 'package:uuid/uuid_util.dart';
 
 class Sensor {
   final bool Status;
@@ -27,8 +29,17 @@ class SensorProvider with ChangeNotifier {
       MqttServerClient.withPort("typelias.se", "Flutter", 1883);
 
   final m = Mutex();
+  late final Uuid uuid;
+  late final String devId;
+
+  SensorProvider() {
+    uuid = Uuid();
+    devId = uuid.v4();
+    print(devId);
+  }
 
   Future<bool> connect() async {
+    //client.logging(on: true);
     client.onConnected = onConnected;
     client.onDisconnected = onDisconnected;
     client.onSubscribed = onSubscribed;
@@ -41,7 +52,7 @@ class SensorProvider with ChangeNotifier {
 
     try {
       await client.connect();
-      subscribe("all/resp");
+      subscribe("all/$devId");
       subscribe("home/change");
       subscribe("home/delete");
       subscribe("pi/cpu");
@@ -55,11 +66,9 @@ class SensorProvider with ChangeNotifier {
 
   void subscribe(String topic) {
     client.subscribe(topic, MqttQos.atMostOnce);
-    //client.updates?.listen(subscribHandler);
   }
 
   void publish(String message, String topic) {
-    //client.updates?.listen(subscribHandler);
     final builder = MqttClientPayloadBuilder();
     builder.addString(message);
     client.publishMessage(topic, MqttQos.atMostOnce, builder.payload!);
@@ -68,7 +77,7 @@ class SensorProvider with ChangeNotifier {
   Future<void> init() async {
     client.updates?.listen(subscribHandler);
     final builder = MqttClientPayloadBuilder();
-    builder.addString("GET");
+    builder.addString("GET:$devId");
     client.publishMessage("all", MqttQos.atMostOnce, builder.payload!);
   }
 
@@ -83,10 +92,10 @@ class SensorProvider with ChangeNotifier {
     b.clear();
     for (var i = 0; i < runs; i++) {
       await bench.acquire();
-      print("run");
+      print("run: $i");
       lastStartTime = DateTime.now();
       final builder = MqttClientPayloadBuilder();
-      builder.addString("GET");
+      builder.addString("GET:$devId");
       client.publishMessage("all", MqttQos.atMostOnce, builder.payload!);
     }
     runningBenchmark = false;
@@ -95,25 +104,20 @@ class SensorProvider with ChangeNotifier {
 
   void subscribHandler(List<MqttReceivedMessage<MqttMessage>> list) {
     for (var element in list) {
-      switch (element.topic) {
-        case "all/resp":
-          handleAll(element);
-          break;
-        default:
-          if (element.topic.contains("home/")) {
-            final splitLen = element.topic.split("/").length;
-            if (splitLen != 2) {
-              return;
-            }
-            handleTemperatureChange(element);
-          } else if (element.topic.contains("pi/")) {
-            final splitLen = element.topic.split("/").length;
-            if (splitLen != 2) {
-              return;
-            }
-            handlePi(element);
-          }
-          break;
+      if (element.topic == "all/$devId") {
+        handleAll(element);
+      } else if (element.topic.contains("home/")) {
+        final splitLen = element.topic.split("/").length;
+        if (splitLen != 2) {
+          return;
+        }
+        handleTemperatureChange(element);
+      } else if (element.topic.contains("pi/")) {
+        final splitLen = element.topic.split("/").length;
+        if (splitLen != 2) {
+          return;
+        }
+        handlePi(element);
       }
     }
   }
@@ -264,7 +268,6 @@ class SensorProvider with ChangeNotifier {
 
   Future<void> removeSensor(int index) async {
     await m.acquire();
-    print("MEMEMEMEME");
     final s = _sensorList.removeAt(index);
     publish(s.Location, "home/delete");
     m.release();

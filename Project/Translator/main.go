@@ -412,11 +412,15 @@ func allCallback(c mqtt.Client, m mqtt.Message) {
 	message := string(m.Payload())
 	fmt.Println(message)
 
-	if message == "GET" {
+	if strings.Contains(message, "GET") {
+		split := strings.Split(message, ":")
+		if len(split) != 2 {
+			return
+		}
 		COAPmsg := createGet("all", "")
 		payload := string(sendCreatedCoap(COAPmsg))
 		fmt.Println(payload)
-		tok := c.Publish("all/resp", 0, false, payload)
+		tok := c.Publish("all/"+split[1], 0, false, payload)
 		tok.Wait()
 	}
 }
