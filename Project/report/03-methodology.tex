@@ -12,19 +12,19 @@ The structure of the IoT system including the planned devices can be found in fi
     \label{fig:communication}
 \end{figure}
 
-The COAP-server and the MQTT-clients will use external libraries while the MQTT-broker and the COAP-client is implemented by me. 
+The CoAP-server and the MQTT-clients will use external libraries while the MQTT-broker and the CoAP-client is implemented by me. 
 The user application will be developed using Flutter and will use a Dart library written by Steve Hamblett \cite{dartMqtt}. 
-All other components are written in Golang. The COAP-server uses a library by plgd\cite{goCOAP} and the MQTT-clinet uses a library by the Eclipse Foundation \cite{goMQTT}.
+All other components are written in Golang. The CoAP-server uses a library by plgd\cite{goCoAP} and the MQTT-clinet uses a library by the Eclipse Foundation \cite{goMQTT}.
 
 The primary purpose of the server is to collect system data more specifically CPU and RAM usage. A client will then be able to request this information. Additionally, the server can create mock temperature sensors. A sensor has a location, power status and a temperature. A client can request temperature, create a sensor, change power status and remove a sensor. 
 
-The translators have two purposes. It will collect data from the COAP-server and publish using the MQTT-client. It will also react to published messages from other MQTT-clients and create COAP-request accordingly. Ex. the Flutter app wants to create a sensor. The translator can then convert a publishing by the application to a COAP POST-request.
+The translators have two purposes. It will collect data from the CoAP-server and publish using the MQTT-client. It will also react to published messages from other MQTT-clients and create CoAP-request accordingly. Ex. the Flutter app wants to create a sensor. The translator can then convert a publishing by the application to a CoAP POST-request.
 
 The MQTT-broker is a standard MQTT-broker implemented using Golang. It will handle the subscription and publish messages, creating a communication channel between the translator and the Flutter application.
 
 Lastly the Flutter application will be multi-platform application acting as the frontend of the IoT system. The app will have the following capabilities. 
 \begin{itemize}
-    \item Display COAP-server system information.
+    \item Display CoAP-server system information.
     \item Display temperature sensor information.
     \item Create temperature sensors.
     \item Turn off specific temperature sensors.
@@ -33,10 +33,10 @@ Lastly the Flutter application will be multi-platform application acting as the 
     \item Display benchmark results.
 \end{itemize}
 
-The system requires one active COAP-server, one active translator, one active MQTT broker and one or more Flutter applications. This implementation will put the COAP-server on a Raspberry Pi running Raspbian and bundle the MQTT-broker and the Translator on a Server running Windows Server. The Flutter application will run on at least IOS but should be able to run on any operating system supported by Flutters build system.
+The system requires one active CoAP-server, one active translator, one active MQTT broker and one or more Flutter applications. This implementation will put the CoAP-server on a Raspberry Pi running Raspbian and bundle the MQTT-broker and the Translator on a Server running Windows Server. The Flutter application will run on at least IOS but should be able to run on any operating system supported by Flutters build system.
 
 \subsection{Evaluation}
-To evaluate the system the RTT will be measured between the user Application and the COAP server. This will be done using a benchmark function inside the Flutter application. Three benchmark runs will be done adding a new instance of the flutter application with each run to simulate different load on the system. The Flutter application will output:
+To evaluate the system the RTT will be measured between the user Application and the CoAP server. This will be done using a benchmark function inside the Flutter application. Three benchmark runs will be done adding a new instance of the flutter application with each run to simulate different load on the system. The Flutter application will output the following metrics:
 \begin{itemize}
     \item Requests per second
     \item Average RTT

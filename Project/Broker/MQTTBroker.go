@@ -299,16 +299,17 @@ func acceptMessage(c *net.Conn, ch chan BroadCastMessage) {
 		return
 	}
 	message := make([]byte, remainder)
-	(*c).Read(message)
+	n, _ := (*c).Read(message)
+	fmt.Println("Read", n, "Bytes")
+	print(constHEAD)
+	print(message)
 	mqttStringLen := binary.BigEndian.Uint16(message[:2])
 	if mqttStringLen != 4 {
 		(*c).Close()
-		panic("Wrong protocoll")
 	}
 	mqttString := string(message[2:6])
 	if mqttString != "MQTT" {
 		(*c).Close()
-		panic("Wring protocoll")
 	}
 	var payload []byte
 	if len(message) > 10 {

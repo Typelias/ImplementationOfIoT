@@ -33,7 +33,7 @@ class SensorProvider with ChangeNotifier {
   SensorProvider() {
     uuid = Uuid();
     devId = uuid.v4();
-    client = MqttServerClient.withPort("typelias.se", "Flutter", 1883);
+    client = MqttServerClient.withPort("typelias.se", "Flutter-$devId", 1883);
   }
 
   Future<bool> connect() async {
