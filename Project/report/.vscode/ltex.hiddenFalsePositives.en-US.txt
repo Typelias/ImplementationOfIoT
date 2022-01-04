@@ -1,1 +1,3 @@
 {"rule":"MORFOLOGIK_RULE_EN_US","sentence":"^\\QThe user application will be developed using Flutter and will use a Dart library written by Steve Hamblett \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q.\\E$"}
+{"rule":"ENGLISH_WORD_REPEAT_BEGINNING_RULE","sentence":"^\\QFlutter applications are written in dart and\\E$"}
+{"rule":"ENGLISH_WORD_REPEAT_BEGINNING_RULE","sentence":"^\\QChapter \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q will go through the construction process for the system.\\E$"}

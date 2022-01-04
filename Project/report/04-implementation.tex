@@ -1,12 +1,171 @@
-\section{Design / Implementation}
+\section{Implementation}
 \label{ch:impl}
 \noindent	
-The Design or Implementation chapter often appears in technical reports, but not always in scientific reports. Here, the analysis of the problem is implemented and a technical requirement specification is formulated. At this stage, the most important principles in the suggested alternatives for solution are described and formulated in preparation for evaluation at a later point in the report. The description is sometimes placed before, but generally after the methodology/model chapter, if included at all.
 
-The reader is seldom interested in extremely detailed documentation of computer program code, algorithms, electrical circuit diagrams, user guidance, etc. Such details are placed in the appendices.
+\subsection{CoAP-server}
+As mentioned in chapter \ref{ch:method:tech} the CoAP-server is implemented in Go using an external library \cite{goCOAP}. The library implements CoAP similarly to how Go normally handles HTTP. To start serving CoAP a router is created for routing request to different locations. A middleware was created to enable logging. The first rout added was the rout to get the mock temperature sensors. To create a rout an endpoint and a handler function needs to be provided to the router. In figure \ref{code:router} we can see the code snipped to create the router, add the middleware and lastly creating the first route.
 
-As mentioned in the Introduction chapter you have during earlier studies mainly worked with small well defined tasks that have taken minutes or as most hours to solve. In comparison an exam work or a project course can sometimes appear to be an almost overwhelming amount of information because it is so extensive, and this may cause anxiety with regards to where to start. One way to facilitate big projects is to use the top-down-method, i.e. to divide the problem or the structure into smaller problem parts or system parts, and to state specification of  requirements, problem analysis and proposed solution for each part. Eventually small and concrete information will have been identified with similar characteristics to those found in your previous studies.
+\begin{figure}[H]
+    \begin{lstlisting}[language=go]
+r := mux.NewRouter()
+r.Use(loggingMiddleware)
+r.Handle("/temp", mux.HandlerFunc(handleTemp))
+    \end{lstlisting}
+    \caption{Go code snipped showing creating the CoAP router, adding a logging middleware and creating the handler for temperature}
+    \label{code:router}
+\end{figure}
 
-It is not always practically possible to apply the top-down-method, since the problem may be too complex and initially very difficult to visualise the complete overview. It might prove necessary to alternate between the top-down - and bottom-up-method. The latter means that you start with parts already known to you and from simple problems that have been tackled previously you  make use of that knowledge for aspects that you expect to resolve at a later stage in the project. Gradually increase these parts into the bigger systems and problems and then pursue the direction of project's objective.
+The temperature handler decodes the incoming CoAP message to figure out what type of request it was. It also checks if the message has a payload. All the request types to this endpoint requires a payload. Figure \ref{code:temp:body} shows the code snippet for the initial handling of a request to the temperature endpoint. If the body does not exist it ends the request there by responding with bad request.
+\begin{figure}[H]
+    \begin{lstlisting}[language=go]
+method := r.Code.String()
+body := make([]byte, 128)
+if r.Body == nil {
+    w.SetResponse(codes.BadRequest, message.TextPlain, bytes.NewReader([]byte(string("No body included"))))
+    return
+}
+n, _ := r.Body.Read(body)
+body = body[:n]
+\end{lstlisting}
+    \caption{Code showing initial handling of the temperature request}
+    \label{code:temp:body}
+\end{figure}
 
-The top-down-method has the advantage of giving the report a solid structure, which makes it easier for the reader. The documentation therefore often follows the top-down-method. It is thus possible to divide the structure part into several chapters, and to name them after each problem part and system part, i.e. “Specification of requirements”, “Algorithms”, “User interface”, “Program documentation”, “Prototype” and “Implementation”.
+The handler can handle 4 different request types: GET, POST, PUT, DELETE. 
+
+GET responds with the current temperature of the processor if it exists otherwise it returns not found. Because the sensor is simulated, after the GET request it either increase or decrease the temperature of the sensor by a random amount between 1-3$^{\circ}C$. Figure \ref{code:temp:struct} shows the structure for a temperature sensor.
+
+\begin{figure}[H]
+    \begin{lstlisting}[language=go]
+type TemperatureSensor struct {
+    Status      bool
+    Temperature int
+    Location    string
+}
+\end{lstlisting}
+    \caption{Structure for a mock temperature sensor}
+    \label{code:temp:struct}
+\end{figure}
+
+POST creates a new temperature sensor. The request requires the payload to contain both the location of the sensor and the initial power status. When the request is received it creates a new instance of a temperature sensor. It assigns the values received and randomizes a temperature between -20-30$^{\circ}C$. If the request is successful it responded with status code created.
+
+PUT request are used to switch power status. The request requires the body to contain the new power status and the name of the sensor to be changed. If the
+sensor exists it changes its power status and responds with status Changed.
+
+DELETE request removes a sensor if the payload includes the sensor name. If the request is successful it responds with Deleted.
+
+For clients to be able to discover what temperature sensors is available the /all endpoint was created. This endpoint only accept GET request and uses Go's built in JSON library to convert the internal map of sensors to a JSON string to include in the response. The code implementation can be found in figure \ref{code:temp:all}.
+
+\begin{figure}[H]
+    \begin{lstlisting}[language=go]
+r.Handle("/all", mux.HandlerFunc(func(w mux.ResponseWriter, r *mux.Message) {
+    data, _ := json.Marshal(thermostats)
+    w.SetResponse(codes.Content, message.TextPlain, bytes.NewReader(data))
+}))
+\end{lstlisting}
+    \caption{Creation of the /all endpoint}
+    \label{code:temp:all}
+\end{figure}
+
+The last endpoint is /pi which enables clients to gather information about the CoAP-server's processor and memory utilization. The server collects this data through the Linux proc files. CPU information is gathered through the proc/stat file while the memory is gathered through the proc/meminfo file. I used a library to help width parsing these files\cite{goProc}. A separate thread reads the proc files every second. For CPU usage it uses the last calculated value to derive the current usage in percentage. For the memory the proc/meminfo contains both free memory and total memory. From this the function derives the current usage in the format used/total.
+
+\subsection{Translator}
+The translator builds on a previous implemented CoAP client in Go. To translate from CoAP to MQTT a MQTT library was added to the project\cite{goMQTT}. The translator will poll data from the CoAP and then publish it to the MQTT-broker. It will also subscribe to certain MQTT messages to be able to convert them to CoAP request. The response from these messages will then be published.
+
+The first thing the Translator does is send a request to the CoAP-server to retrieve the available sensor. This is to keep an internal map of what sensor are online to prevent the Translator to pull unnecessary data. After it retrieves the information about the temperature sensors it starts the connection to the MQTT broker and creates some constant subscriptions. When subscribing the MQTT library requires callback functions that will fire when a message is received to that topic. The connection code can be found in figure \ref{code:translator:connect}
+
+\begin{figure}[H]
+    \begin{lstlisting}[language=go]
+populateSensors()
+var broker = "localhost"
+var port = 1883
+opts := mqtt.NewClientOptions()
+opts.AddBroker(fmt.Sprintf("tcp://%s:%d", broker, port))
+opts.SetClientID("Coap Translator")
+
+opts.SetDefaultPublishHandler(messagePubHandler)
+opts.OnConnect = connectHandler
+opts.OnConnectionLost = connectLostHandler
+opts.SetPingTimeout(time.Second * 60)
+
+client := mqtt.NewClient(opts)
+
+if token := client.Connect(); token.Wait() && token.Error() != nil {
+    panic(token.Error())
+}
+\end{lstlisting}
+    \caption{Connection code for the Go MQTT client}
+    \label{code:translator:connect}
+\end{figure}
+
+The constant subscription are: all, home/add, home/delete and home/change. The all topic is used for communication to the MQTT network the available temperature sensors. If an MQTT client publish a message with the structure GET:$id$. The Translator will get the information using the CoAP client and then forward the response to MQTT network via a publish message to the topic all/$id$. The function for parsing all the publish messages can be found in figure \ref{code:translator:all}
+
+\begin{figure}[H]
+    \begin{lstlisting}[language=go]
+func allCallback(c mqtt.Client, m mqtt.Message) {
+    message := string(m.Payload())
+    fmt.Println(message)
+
+    if strings.Contains(message, "GET") {
+        split := strings.Split(message, ":")
+        if len(split) != 2 {
+            return
+        }
+        COAPmsg := createGet("all", "")
+        payload := string(sendCreatedCoap(COAPmsg))
+        fmt.Println(payload)
+        tok := c.Publish("all/"+split[1], 0, false, payload)
+        tok.Wait()
+    }
+}
+\end{lstlisting}
+    \caption{Function for parsing the /all endpoint}
+    \label{code:translator:all}
+\end{figure}
+
+The home/add subscription is used to create a sensor. The Translator listens for publish messages and then relays the information to the CoAP-server. Figure \ref{code:translator:add} shows a code for the callback function to the home/add subscribe.
+
+\begin{figure}[H]
+    \begin{lstlisting}[language=go]
+func addCallback(c mqtt.Client, m mqtt.Message) {
+	message := string(m.Payload())
+	msg := createPost("temp", message)
+	payload := string(sendCreatedCoap(msg))
+	fmt.Print(payload)
+	populateSensors()
+}
+\end{lstlisting}
+    \caption{Function for parsing the home/add publish}
+    \label{code:translator:add}
+\end{figure}
+
+The home/change and home/delete functions similarly to home/add. home/change is used to change the power status of a temperature sensor and the home/delete is used to delete a temperature sensor. For all of these function the Translator repopulates the internal map to be up-to-date on what sensors exist and their power status
+
+The main loop of the Translator is to first pull the temperature sensors if they are online. It then publishes this temperature to home/$id$. After it has taken care of the temperature it moves on to the CPU and memory information. It creates a request to the CoAP-server and then splits the information in to two publishes pi/cpu and pi/mem. When it has published the data it sleeps for 10 seconds and then starts from the top. The code for the main loop can be found in figure \ref{code:translator:loop}
+
+\begin{figure}[H]
+    \begin{lstlisting}[language=go]
+for {
+    for k, online := range sensors {
+        if online {
+            msg := createGet("temp", k)
+            p := sendCreatedCoap(msg)
+            tok = client.Publish("home/"+k, 0, true, p)
+            tok.Wait()
+        }
+    }
+    msg := createGet("pi", "")
+    p := sendCreatedCoap(msg)
+    //fmt.Println(string(p))
+    tok = client.Publish("pi/cpu", 0, true, strings.Split(string(p), ":")[0])
+    tok.Wait()
+    tok = client.Publish("pi/mem", 0, true, strings.Split(string(p), ":")[1])
+    tok.Wait()
+    time.Sleep(time.Second * 10)
+}
+\end{lstlisting}
+    \caption{The main loop of the Translator}
+    \label{code:translator:loop}
+\end{figure}
+
+\subsection{Flutter mobile application}

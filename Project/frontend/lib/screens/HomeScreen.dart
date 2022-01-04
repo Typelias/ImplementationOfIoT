@@ -4,6 +4,7 @@ import 'package:frontend/providers/sensors.dart';
 import 'package:frontend/widgets/addSensorDialog.dart';
 import 'package:frontend/widgets/sensorGrid.dart';
 import 'package:provider/provider.dart';
+import 'package:stats/stats.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -40,47 +41,52 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget getResult(List<Duration> l) {
-    int totalTime = 0;
-    for (var element in l) {
-      totalTime += element.inMilliseconds;
-    }
-    final avg = (totalTime / l.length) / 1000;
-    l.sort((el1, el2) => el1.inMilliseconds.compareTo(el2.inMilliseconds));
-    final min = l.first.inMilliseconds / 1000;
-    final max = l.last.inMilliseconds / 1000;
-
+    final stat = Stats.fromData(l.map((e) => e.inMilliseconds).toList())
+        .withPrecision(3);
     final reqPerSec = l.length /
         (Provider.of<SensorProvider>(context, listen: false).totalTime / 1000);
+    const style = TextStyle(fontSize: 14);
     return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Column(
-              children: [
-                const Text("Request/Second"),
-                Text(reqPerSec.toStringAsFixed(3))
-              ],
-            )
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              children: [
-                const Text("Average"),
-                Text(avg.toStringAsFixed(3) + "s")
-              ],
-            ),
-            Column(
-              children: [const Text("Max"), Text(max.toStringAsFixed(3) + "s")],
-            ),
-            Column(
-              children: [const Text("Min"), Text(min.toStringAsFixed(3) + "s")],
-            )
-          ],
+        Text("Result for ${l.length} requests:"),
+        SizedBox(
+          width: double.infinity,
+          child: Table(
+            border: TableBorder.all(width: 3),
+            columnWidths: const <int, TableColumnWidth>{
+              0: FixedColumnWidth(100),
+              1: FixedColumnWidth(20),
+            },
+            defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+            children: [
+              TableRow(
+                children: [
+                  const Text("Request/Second:", style: style),
+                  Text(reqPerSec.toStringAsFixed(3) + "st", style: style)
+                ],
+              ),
+              TableRow(children: [
+                const TableCell(
+                    child: Text("Standard Deviation:", style: style)),
+                TableCell(
+                    child: Text(stat.standardDeviation.toString() + "ms",
+                        style: style))
+              ]),
+              TableRow(children: [
+                const TableCell(child: Text("Mean:", style: style)),
+                TableCell(
+                    child: Text(stat.average.toString() + "ms", style: style))
+              ]),
+              TableRow(children: [
+                const TableCell(child: Text("Min:", style: style)),
+                Text(stat.min.toString() + "ms", style: style)
+              ]),
+              TableRow(children: [
+                const TableCell(child: Text("Max:", style: style)),
+                TableCell(child: Text(stat.max.toString() + "ms", style: style))
+              ]),
+            ],
+          ),
         ),
       ],
     );
@@ -94,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
               content: FutureBuilder(
                 //BENCHMARK
                 future: Provider.of<SensorProvider>(ctx, listen: false)
-                    .benchmark(10000),
+                    .benchmark(100),
                 builder: (context, snapshot) {
                   return snapshot.connectionState == ConnectionState.waiting
                       ? const Text("Running benchmark")

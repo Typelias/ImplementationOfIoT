@@ -1,46 +1,68 @@
 \section{Introduction}
 \label{ch:intro}
 \noindent
-During your previous education, you have probably come across relatively well defined problem types as formulated by teachers, textbooks and teaching aids. During project courses and exam work you are required to do a great deal of the thinking by yourself in order to define and clarify the direction of the assignment. This analysis should be presented in the report's introductory chapter. By describing the problem or problem area chosen for study and the reasons behind this choice, it should then be possible to write a general introduction to the report.
-The introductory chapter relates to the content in the project plan that will be presented some weeks after the diploma work has started. The project plan should also contain a time plan for the work. The project plan can also mention some of the intended sources to be read and subsequently referred to in chapter 2, and also to contain some thoughts about the method (see chapter 3) chosen in order to approach the problem.
-The introduction making up chapter 1, may also contain sub-headings underneath. Try to get to the point as soon as possible. In order to retain the reader's interest information concerning your work must be given within the first few sentences. People only requiring a quick insight into the work will often only read the report's summary, introduction and conclusions, since these sections are usually written without the inclusion of highly technical and mathematical details.
+
+
+
+% During your previous education, you have probably come across relatively well defined problem types as formulated by teachers, textbooks and teaching aids. During project courses and exam work you are required to do a great deal of the thinking by yourself in order to define and clarify the direction of the assignment. This analysis should be presented in the report's introductory chapter. By describing the problem or problem area chosen for study and the reasons behind this choice, it should then be possible to write a general introduction to the report.
+% The introductory chapter relates to the content in the project plan that will be presented some weeks after the diploma work has started. The project plan should also contain a time plan for the work. The project plan can also mention some of the intended sources to be read and subsequently referred to in chapter 2, and also to contain some thoughts about the method (see chapter 3) chosen in order to approach the problem.
+% The introduction making up chapter 1, may also contain sub-headings underneath. Try to get to the point as soon as possible. In order to retain the reader's interest information concerning your work must be given within the first few sentences. People only requiring a quick insight into the work will often only read the report's summary, introduction and conclusions, since these sections are usually written without the inclusion of highly technical and mathematical details.
 
 \subsection{Background and problem motivation}
 \label{ch:intro:problem-motivation}
-In this sub-chapter you should try to quickly engage the readers' interest in the problem area you have chosen to examine. Demonstrate that you are not only familiar with any minor technical problems, but also have an understanding of the context in which your problem emerges, that you can also describe it from a non-technical perspective, and that you are aware of the practical benefits of the technology you are examining or have knowledge of areas that your study relates to.
 
-It is common that the first sentence contains an insightful formulation or historical retrospective. Obviously it is not possible to be absolutely certain with regards to the future, but you should express your hypothesis in a balanced and objective manner in order to appear credible.
+IoT is a growing market in the world with MQTT and CoAP emerging as the dominant protocols for communication. Different IoT systems might need to communicate with one another event tho they might use different protocols. To do this a translator is needed to be able to translate CoAP to MQTT. 
 
-Examples: “Humankind during historical times has… . The use of internet and cellular telephony has grown since… . The next stage in the development is expected to become… . This can lead to problems with… This study investigates if the problem can be solved with the aid of… . This technology can become especially interesting if in some years many more people…, and there is a growing demand on the market after… ”.
 
-A technical report that is carried out on behalf of a company could start with: “Within the organization there is an increased need for… and at the same time growing problems with…. We therefore in the assignment choose to implement a preliminary study about…. A solution to this problem is urgently sought for because this can lead to a considerable reduction of costs for…, increased market shares within… and an improved work environment.”
+% In this sub-chapter you should try to quickly engage the readers' interest in the problem area you have chosen to examine. Demonstrate that you are not only familiar with any minor technical problems, but also have an understanding of the context in which your problem emerges, that you can also describe it from a non-technical perspective, and that you are aware of the practical benefits of the technology you are examining or have knowledge of areas that your study relates to.
 
-\subsection{Overall aim / High-level problem statement}
+% It is common that the first sentence contains an insightful formulation or historical retrospective. Obviously it is not possible to be absolutely certain with regards to the future, but you should express your hypothesis in a balanced and objective manner in order to appear credible.
+
+% Examples: “Humankind during historical times has… . The use of internet and cellular telephony has grown since… . The next stage in the development is expected to become… . This can lead to problems with… This study investigates if the problem can be solved with the aid of… . This technology can become especially interesting if in some years many more people…, and there is a growing demand on the market after… ”.
+
+% A technical report that is carried out on behalf of a company could start with: “Within the organization there is an increased need for… and at the same time growing problems with…. We therefore in the assignment choose to implement a preliminary study about…. A solution to this problem is urgently sought for because this can lead to a considerable reduction of costs for…, increased market shares within… and an improved work environment.”
+
+\subsection{Overall aim}
 \label{ch:intro:overall-aim}
-(Choose one of the headline alternatives.) The project's aim is an insightful description of the direction in which you want to work, your hopes with regards to the possible outcomes of the project, and of the projects' purpose. The hypothesis does not need to be clearly defined or concrete. It can be an objective which may or may not be resolved or achieved with any degree of certainty. It can be a problem formula of a high level, which cannot be answered by the study's diagrams, tables and other objective results, but which can be discussed in the report's concluding chapter.
+The aim for this project is to implement a system that translates responses from a CoAP server to a MQTT client running on a mobile application. The scenario is to monitor the CoAP server system usage and prepare a system for future integration with temperature sensors. 
 
-Examples: “the project's overall aim is to gain new knowledge within the organization about… ”. “The project's aim is to identify the general valid principles for the connection between parameter X and Y for everybody…”. “The project's aim is to find new technical solutions to problems in the following area: ….” “The project's aim is to compare technology A with technology B as a solution to the needs of C.” “The project aims to present a decision-making basis for…” “The project aims to investigate whether or not it is realistic to expect that technology A could be used for purpose B in the future.”
+% (Choose one of the headline alternatives.) The project's aim is an insightful description of the direction in which you want to work, your hopes with regards to the possible outcomes of the project, and of the projects' purpose. The hypothesis does not need to be clearly defined or concrete. It can be an objective which may or may not be resolved or achieved with any degree of certainty. It can be a problem formula of a high level, which cannot be answered by the study's diagrams, tables and other objective results, but which can be discussed in the report's concluding chapter.
 
-\subsection{Concrete and verifiable goals / Detailed problem statement}
+% Examples: “the project's overall aim is to gain new knowledge within the organization about… ”. “The project's aim is to identify the general valid principles for the connection between parameter X and Y for everybody…”. “The project's aim is to find new technical solutions to problems in the following area: ….” “The project's aim is to compare technology A with technology B as a solution to the needs of C.” “The project aims to present a decision-making basis for…” “The project aims to investigate whether or not it is realistic to expect that technology A could be used for purpose B in the future.”
+
+\subsection{Concrete and verifiable goals}
 \label{ch:intro:verifiable-goals}
-The problem- or objective statement is a verification of the proposed formula you will use to reach your objective. The questions that are specified should be answered in the report's results, and in its conclusion. The problem statement should be so clearly defined that deciding whether or not the problem has been resolved should be an easy process.
+The goals for this project
+\begin{itemize}
+    \item Combine a MQTT-client with a CoAP-client for translation.
+    \item Implement a CoAP-server capable of serving CPU, memory usage and mock temperature sensors.
+    \item Create a user application capable of displaying the information.
+    \item Perform measurements on the system for evaluation.
+\end{itemize}
 
-This sub-chapter is usually written after the implementation of the theoretical study in chapter 2, and should be revised at regular intervals throughout the duration of the project. The problem statement might in some cases require to be placed after the theoretical study. This way  of  writing a study may be used if it seems to be difficult for the reader to understand the concepts used. The disadvantage of such a layout is that the reader might lose interest in the subject before the core points have been stated.
 
-Examples of problem statements useful in a scientific report are “the survey has an objective to respond to the following questions: P1: What importance has technology A compared with technology B for the performance measure Y at different values on parameter X, for cases F1 and F2? P2: Which profit gives… For mathematical definitions of X and Y, see the model in chapter 3.” It is then in chapter 3 that the objective numerical results will be specified, i.e. what will exist on the x - and y-axis in the diagram you intend to take further.
+% The problem- or objective statement is a verification of the proposed formula you will use to reach your objective. The questions that are specified should be answered in the report's results, and in its conclusion. The problem statement should be so clearly defined that deciding whether or not the problem has been resolved should be an easy process.
 
-Examples of objectives for a technical report: “the survey's objective is to suggest a solution to the following technical problems: …… the survey has further objectives to verify that the solution proposal provides useable criteria and to evaluate the proposal with respect to performance measure Y.”
+% This sub-chapter is usually written after the implementation of the theoretical study in chapter 2, and should be revised at regular intervals throughout the duration of the project. The problem statement might in some cases require to be placed after the theoretical study. This way  of  writing a study may be used if it seems to be difficult for the reader to understand the concepts used. The disadvantage of such a layout is that the reader might lose interest in the subject before the core points have been stated.
 
-All technical details are reserved for the structure chapter's technical requirement specifications.
+% Examples of problem statements useful in a scientific report are “the survey has an objective to respond to the following questions: P1: What importance has technology A compared with technology B for the performance measure Y at different values on parameter X, for cases F1 and F2? P2: Which profit gives… For mathematical definitions of X and Y, see the model in chapter 3.” It is then in chapter 3 that the objective numerical results will be specified, i.e. what will exist on the x - and y-axis in the diagram you intend to take further.
+
+% Examples of objectives for a technical report: “the survey's objective is to suggest a solution to the following technical problems: …… the survey has further objectives to verify that the solution proposal provides useable criteria and to evaluate the proposal with respect to performance measure Y.”
+
+% All technical details are reserved for the structure chapter's technical requirement specifications.
 
 \subsection{Scope}
 \label{ch:intro:scope}
-Examples: “The study has its focus on…. In the survey, the effect of parameter Z is ignored, because…. The survey is distinguished by the evaluation of cases F1 and F2…. The survey's conclusions should however be generally valid for every….”
+This project will focus on implementing an end to end system from a CoAP-server to MQTT-client through a MQTT-broker. The only measurement that I will be conducting is the RTT from the client application to the CoAP-server from this the mean, min max and standard deviation will be calculated. From the total time for x amount of requests the request per second will be calculated.
 
 \subsection{Outline}
 \label{ch:intro:outline}
-Briefly describe the report's outline. “Chapter 2 describes…”
+Chapter \ref{ch:theory} will go into theory about the technology used. Chapter \ref{ch:method} will motivate the technology choices as well as describe the system. Chapter \ref{ch:impl} will go through the construction process for the system. Chapter \ref{ch:results} will present the result from the measurements. Chapter \ref{ch:concl} will discuss the result as well as draw conclusion from this project.
 
 \subsection{Contributions}
 \label{ch:intro:contributions}
-Describe which parts of the work that you have conducted yourself, and which parts that you had help with i.e. carried out by colleagues. If the work is carried out in a group the report should then explain how the tasks were divided between authors. All co-authors should be credited in the work as a whole.
+This project and report was done by me.
+I would like to thank a couple of people and companies for their open source packages that made this project possible.
+First I would like to thank plgd for their COaP package for Go.
+I would also like to thank the Eclipse foundation for their Go package for MQTT.
+Lastly I would like to thank Steve Hamblett for his MQTT package for Dart.

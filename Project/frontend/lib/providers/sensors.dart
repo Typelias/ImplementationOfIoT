@@ -99,8 +99,10 @@ class SensorProvider with ChangeNotifier {
       builder.addString("GET:$devId");
       client.publishMessage("all", MqttQos.atMostOnce, builder.payload!);
     }
+    await bench.acquire();
     runningBenchmark = false;
     totalTime = DateTime.now().difference(benchStart).inMilliseconds;
+    bench.release();
 
     return b;
   }

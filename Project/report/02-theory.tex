@@ -3,12 +3,21 @@
 \noindent
 
 \subsection{CoAP}
-CaAP is a communication protocol over UDP aimed for lower powered computers. It is often used by small microcontrollers that only have limited storage and RAM available. CoAP uses the client server model. The server accepts requests and then responds. The server also provides methods for clients to discover resources on the server. CoAP was designed to be easily translated to HTTP and uses similar request to HTTP, for example GET and POST \cite{rfc7252}.
+CaAP is a communication protocol over UDP aimed for lower powered computers. It is often used by small microcontrollers that only have limited storage and RAM available. CoAP uses the client server model. The server accepts requests and then responds. The server also provides methods for clients to discover resources on the server. CoAP was designed to be easily translated to HTTP and uses similar request to HTTP, for example GET and POST. \cite{rfc7252}
 
 \subsection{MQTT}
-MQTT is a communication protocol over TCP. It is lightweight and provides an open communication channel between devices. The MQTT system consists of one broker and many clients. A client can subscribe 
+MQTT is a communication protocol over TCP. It is lightweight and provides an open communication channel between devices. The MQTT system consists of one broker and many clients. A client can subscribe and publish data to topics. The broker then makes sure to distribute the data to all subscribers. The protocol was designed in the 1990s for use in oil pipeline monitoring. Today it is more commonly used in IoT applications. \cite{MQTT}
 \subsection{Flutter}
-
+Flutter is a framework for building multiplatform applications. Flutter is open source and developed by Google. Flutter applications are written in dart and the framework can compile the dart code to machine code for both x86 and ARM. It can also combine the code to JavaScript for web compatibility. \cite{flutter} As of version 2.0 of Flutter the following platforms are supported: \cite{flutterPlat}
+\begin{itemize}
+    \item Android
+    \item IOS
+    \item Web
+    \item Windows (beta)
+    \item Windows UWP (alpha)
+    \item Linux (beta)
+    \item MacOS (beta)
+\end{itemize}
 
 % In the report's theory study, sometimes called Related work, there may be additional facts required for the reader's understanding of the report. At this point a summary of background material in the area should be provided, i.e. standards, scientific articles, books, magazines, documents on the web, technical reports and user manuals. Explain pedagogically with clear examples and many illustrations.
 

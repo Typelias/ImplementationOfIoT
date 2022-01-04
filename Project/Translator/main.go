@@ -446,6 +446,7 @@ func deleteCallback(c mqtt.Client, m mqtt.Message) {
 	msg := createDelete("temp", message)
 	payload := string(sendCreatedCoap(msg))
 	fmt.Print(payload)
+	populateSensors()
 }
 
 var messagePubHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
@@ -517,7 +518,6 @@ func main() {
 				tok = client.Publish("home/"+k, 0, true, p)
 				tok.Wait()
 			}
-
 		}
 		msg := createGet("pi", "")
 		p := sendCreatedCoap(msg)
@@ -527,7 +527,6 @@ func main() {
 		tok = client.Publish("pi/mem", 0, true, strings.Split(string(p), ":")[1])
 		tok.Wait()
 		time.Sleep(time.Second * 10)
-
 	}
 
 }

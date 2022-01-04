@@ -2,7 +2,8 @@
 \label{ch:method}
 \noindent	
 
-\subsection{System description}
+
+\subsection{System overview}
 \label{ch:method:model}
 The structure of the IoT system including the planned devices can be found in figure \ref{fig:communication}. 
 \begin{figure}[H]
@@ -12,10 +13,14 @@ The structure of the IoT system including the planned devices can be found in fi
     \label{fig:communication}
 \end{figure}
 
-The CoAP-server and the MQTT-clients will use external libraries while the MQTT-broker and the CoAP-client is implemented by me. 
-The user application will be developed using Flutter and will use a Dart library written by Steve Hamblett \cite{dartMqtt}. 
-All other components are written in Golang. The CoAP-server uses a library by plgd\cite{goCoAP} and the MQTT-clinet uses a library by the Eclipse Foundation \cite{goMQTT}.
 
+\subsection{Choice of technologies}
+\label{ch:method:tech}
+Two components of the system was already developed as part of two previous projects. These are the CoAP-Client and the MQTT-broker. These where implemented in Go for its excellent concurrency. This does not affect the CoAP-client, but it is useful for the MQTT-broker for handling multiple connections. Another perk of Go is how easy it is to create the different connection types. Lastly Go has a built-in datatype for Bytes and that came in handy when reading and writing data from sockets. 
+
+Because of the Go implementation on the previous parts it was only natural to have the CoAP-server in Go. To create a server an external library was used \cite{goCOAP}. The translator needs to combine both a CoAP-client and a MQTT-client. To be compatible with the created CoAP-Client the MQTT-client needs to be written in Go. For this I also used a Go library \cite{goMQTT}. Lastly Flutter will be used to create the user interface. Flutter was chosen for its capability to be compiled to multiple platforms. This allows for the app to be installed on multiple devices' whiteout needing to rewrite the application. To communicate with the MQTT-broker an external dart library was used \cite{dartMqtt}.
+
+\subsection{System description}
 The primary purpose of the server is to collect system data more specifically CPU and RAM usage. A client will then be able to request this information. Additionally, the server can create mock temperature sensors. A sensor has a location, power status and a temperature. A client can request temperature, create a sensor, change power status and remove a sensor. 
 
 The translators have two purposes. It will collect data from the CoAP-server and publish using the MQTT-client. It will also react to published messages from other MQTT-clients and create CoAP-request accordingly. Ex. the Flutter app wants to create a sensor. The translator can then convert a publishing by the application to a CoAP POST-request.
