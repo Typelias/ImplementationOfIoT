@@ -306,10 +306,12 @@ func acceptMessage(c *net.Conn, ch chan BroadCastMessage) {
 	mqttStringLen := binary.BigEndian.Uint16(message[:2])
 	if mqttStringLen != 4 {
 		(*c).Close()
+		return
 	}
 	mqttString := string(message[2:6])
 	if mqttString != "MQTT" {
 		(*c).Close()
+		return
 	}
 	var payload []byte
 	if len(message) > 10 {
