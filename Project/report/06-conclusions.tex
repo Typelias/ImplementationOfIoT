@@ -2,28 +2,40 @@
 \label{ch:concl}
 \noindent	
 \subsection{Implementation}
+\label{ch:concl:imp}
 A complete system was implemented with working communication from a MQTT client in a user application to a CoAP-server running. There is one bug in the system that I have not found a solution for. Sometimes the Dart version of the MQTT-client sends a connect-message with identity 0 which is a reserved message ID. As I have not created it was hard to find the cause for this bug and I was not able to create a successful workaround. Luckily this does not happen often.
 
 Another problem was that I was not able to fully utilize Flutters multi-platform support. The MQTT Dart library does support all platforms, but it requires different client objects for web applications. Dart does provide a check if the application is running on the web but including the package for the web version of the MQTT-client also adds a package that is not supported by the other platforms thus breaking the application for other platforms. 
 
 By using Go for building everything is set up for concurrency, but I did not utilize it fully. Both the CoAP-server and the translator could be multithreaded using Go's concurrency features. This could theoretically decrease the latency.
 
+\subsubsection{Other alternatives}
+My implementation is not the only way to implement an end to end system for showing information from a remote device. Other alternatives could be using HTTP REST, WebSockets, pure CoAP and pure MQTT. 
+
+Both MQTT and WebSockets offer an open bidirectional channel for communication between client and servers. The difference here is that MQTT has a structure for how clients send and receive messages. WebSockets on the other hand only is a standard for an open communication channel. When a client opens a WebSocket connection it can send and receive data. Underlying message structure is decided by the developer\cite{rfc6455}.
+
+CoAP and HTTP REST work similarly. CoAP being designed to mimic the HTTP REST system. CoAP being more lightweight and is thus more suitable for IoT purposes. \cite{coapTech} Periodic data information this could be an alternative but for my application that have sensors that push data more frequently using one of these technologies would mean sending more requests periodical instead of getting the information when it is published.
+
+If I were to build this again I would aim for a purely MQTT system and remove CoAP. If I was dealing with more sparse update on the IoT data, then CoAP would be better suited due to the system not updating as often.
+
 
 \subsection{Results}
+In the figure \ref{fig:bench2} and figure \ref{fig:bench3}. We can see that when the application is compiled for macOS it has overall the worst latency in terms of mean, max and standard deviation. It is expected for the result to be different depending on what applications request reach the broker first. But I also think that due to Flutter not being able to compile to ARM binaries for macOS and thus the macOS version of the application running on a compatibility layer could affect the results.
 
+Looking at all the benchmark runs side by side the mean and max values does not change drastically except for the macOS case. Comparing figure \ref{fig:bench1:dev1}, figure \ref{fig:bench2:dev1} and figure \ref{fig:bench3:dev1} we can see that from benchmark run 1 to run 2 the number of request per second decrease from about 28 to about 23. But from run 2 to run 3 we only see a change from about 23 to 22. Similar changes can be seen in the other metrics as well, a bigger change between run 1 and run 2 but a smaller change between run 3 and 4. 
 
-% The conclusion/discussion (choose a heading) is a separate chapter in which the results are analysed and critically assessed. At this point your own conclusions, your subjective view, and explanations of the results are presented.
-
-% If this chapter is extensive it can be divided up into more chapters or sub-chapters i.e. one analysis or discussion chapter with explanations of and critical assessment of the results, a concluding chapter where the most important results and well supported conclusions are discussed and to sum it up a chapter with suggestions for further research in the same area. In this chapter it is of vital importance that a connection back to the aim of the survey is made and thus the purpose is pointed out in a summary and analysis of the results. 
-
-% In this chapter you should also include answers to the following questions: What is the project's news value and its most vital contribution to the research or technology development? Have the project's goals been achieved? Has the task been accomplished? What is the answer to the opening problem formula? Was the result as expected? Are the conclusions general, or do they only apply during certain conditions? Discuss the importance of the choice of method and model for the results. Have new questions arisen due to the result?
-
-% The last question invites the possibility to offer proposals to others relevant research, i.e. proposal points for measures and recommendations, points for continued research or development for those wishing to build upon your work. In technical reports on behalf of companies, the recommended solution to a problem is presented at this stage and it is possible to offer a consequence analysis of the solution from both a technical and layman perspective, for example regarding environment, economy and changed work procedures. The chapter then contains recommended measures and proposals for further development or research, and thus to function as a basis for decision-making for the employer or client.
+To get a better understanding on how the system scales I would like to write a Go program that can generate x amount of Clients in separate threads to emulate more clients sending and receiving data. Due to the time limitation of this project I was not able to create this. Lastly as I mentioned in chapter \ref{ch:concl:imp} multi threading is possible on both the Translator and CoAP-server. It would be interesting to see how this changes the RTT.
 
 \subsection{Ethical and Societal Discussion}
 \label{ch:concl:ethical}
-% You will need to include a discussion on ethics, societal impact, and considerations.
+When talking about IoT as a whole I think it is important to talk about privacy concerns. A lot of IoT systems for consumers are built on cloud technologies for a fluid user experience, and one thing I keep in mind is if the cloud service the company uses for their IoT devices is free then the user data is the product. 
+
+With this project I am now able to implement IoT Protocols and if I want to avoid my data being collected I could just implement my own smart home. The problem here is we cannot expect the average consumer to do this. Thus, the consumer must be aware of what product collects data and how it is handled by the producer.
 
 \subsection{Future Work}
 \label{ch:concl:future-work}
-% You should also explain potential future work based on your work.
+First improvement I would make is to enable multithreading on both the Translator and the CoAP-server. This would theoretically improve the RTT due to both the Windows Server running the Translator and the Raspberry Pi running the CoAP-server having multiple cores to process requests on. 
+
+To better evaluate the system I would like to implement a program in Go that uses multiple threads to simulate more clients. With the multiple clients in the same program it would be easier to calculate metrics based on all clients RTT instead of each client on its own.
+
+In the end I would ideily remove CoAP from the system completely because I do not think it contributes much to the system. For now the system runs on "stable" hardware with every component except the Flutter application running on hardwired Ethernet.

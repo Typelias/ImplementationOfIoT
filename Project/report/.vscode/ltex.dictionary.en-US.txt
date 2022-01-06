@@ -5,3 +5,6 @@ MQTT-clinet
 CaAP
 CoAP-client
 mutex
+WebSockets
+WebSocket
+ideily
