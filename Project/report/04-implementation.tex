@@ -169,3 +169,182 @@ for {
 \end{figure}
 
 \subsection{Flutter mobile application}
+The frontend application was created using the Flutter framwork. To handle the IoT connection an external library \cite{dartMqtt} was used. Dart is a single threaded language but uses a similar system to JavaScript to handle asynchronous code. This enables the application to do different things at the same time. The MQTT library requires a callback function to be passed handle all the publish messages. This differs from the way the Go library handles it due to it using different callbacks for different topics. 
+
+The app has one screen that displays the information it receives from the MQTT broker. The screen consist of two grids. One for displaying the CoAP-server system information and the other for displaying all the temperature sensors. A sensor is represented with a tile that the user can interact with. The user can delete a sensor by touching and holding on the tile. To change power state a switch is present in the tile. Figure \ref{fig:appHome} shows the application home screen and figure \ref{fig:appHome} shows the code for one tile.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{img/homeScreen.png} 
+    \caption{Flutter application main screen}
+    \label{fig:appHome}
+\end{figure}
+
+\begin{figure}[H]
+    \begin{lstlisting}[language=c++]
+GestureDetector(
+onLongPress: () {
+    openDialog(context, i);
+},
+child: Card(
+    color: Colors.white10,
+    child: Padding(
+    padding: const EdgeInsets.all(8.0),
+    child: GridTile(
+        header: Text(
+        sensorData.sensors[i].Location.toUpperCase(),
+        style: const TextStyle(color: Colors.white60),
+        textScaleFactor: 1.5,
+        textAlign: TextAlign.center,
+        ),
+        child: GridTileBar(
+        subtitle: sensorData.sensors[i].Status
+            ? TemperatureText(
+                sensorData.sensors[i].Temperature)
+            : const Text(
+                "Offline",
+                textAlign: TextAlign.center,
+                ),
+        ),
+        footer: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+            const Text(
+            "Power status: ",
+            textScaleFactor: 1,
+            style: TextStyle(color: Colors.white),
+            ),
+            CupertinoSwitch(
+            value: sensorData.sensors[i].Status,
+            onChanged: (newVal) =>
+                sensorData.changePowerStatus(newVal, i),
+            ),
+        ],
+        ),
+    ),
+    ),
+),
+);
+
+\end{lstlisting}
+    \caption{The Dart code for creating a tile}
+    \label{code:app:tile}
+\end{figure}
+
+To help with keeping a global state a package\cite{provider} was added. This package enables widgets to listen for changes in class variables and function outputs and then updates the UI accordingly. I used this package to manage a global state of temperature sensors and system usage of the CoAP-server. Whenever new data is available the class calls notifyListeners() functions that tells every listener to update the UI.
+
+To enable the user to add a new temperature sensor a dialog popup was created. The popup requires the user to input a name and the initial power status for the temperature sensor. A dialog in Flutter does not have the same state capabilities as a normal Widget. For user input to be validated state is needed. I solved this by using a special widget called StatefulBuilder. This widget creates its own inner state and instead of taking children it takes a function that returns a widget. Inside this function it has its own state management to re-render the UI as needed. The code for the dialog can be found in figure \ref{code:app:add}
+
+\begin{figure}[H]
+    \begin{lstlisting}[language=c++]
+StatefulBuilder(
+builder: (context, setState) {
+    return CupertinoAlertDialog(
+    title: const Text("Add sensor"),
+    content: Column(
+        children: [
+        CupertinoTextField(
+            placeholder: "location",
+            keyboardType: TextInputType.name,
+            controller: _locationController,
+        ),
+        const SizedBox(
+            height: 10,
+        ),
+        Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+            const Text(
+                "Power status: ",
+                textScaleFactor: 1.5,
+            ),
+            CupertinoSwitch(
+                value: initialState,
+                onChanged: (val) => setState(
+                () {
+                    initialState = !initialState;
+                },
+                ),
+            ),
+            ],
+        ),
+        ],
+    ),
+    actions: [
+        CupertinoDialogAction(
+        child: const Text("Close"),
+        onPressed: () => Navigator.of(context).pop(),
+        isDestructiveAction: true,
+        ),
+        CupertinoDialogAction(
+        child: const Text("Add"),
+        onPressed: submit,
+        ),
+    ],
+    );
+},
+);
+    \end{lstlisting}
+    \caption{The Dart code for creating the add dialog}
+    \label{code:app:add}
+\end{figure}
+
+The last component to complete the app is the capability to run benchmark. To make it easier to create metrics a package\cite{dartStat} was added. The package can calculated a number of different metrics given an array of data. For this project we are only interested in mean, standard deviation, min and max. 
+
+To get the benchmark results a function is run to calculate the RTT. The app publishes to /all. This publish message is then distributed through the MQTT-broker and picked up by the Translator. The Translator then sends a request to the CoAP-server. When the Translator gets a response from the CoAP-server it the publishes to the MQTT-broker which then distributes the message back to the Flutter application. When the application receives the message it can then derive the round trip time.
+
+To ensure only one message is sent at a time another package\cite{dartMutex} containing mutex locks was added. Even tho Dart is single thread code can still occur asynchronous. Before a new message is sent from the application it needs to acquire the mutex lock. The lock is then released upon receiving the response. This way only one request can be active at a time. The code for the main benchmark function can be found in figure \ref{code:app:bench} and a code snippet showing how the stats package is used can be found in figure \ref{code:app:stat}
+
+\begin{figure}[H]
+    \begin{lstlisting}[language=c++]
+Future<List<Duration>> benchmark(int runs) async {
+    runningBenchmark = true;
+    if (bench.isLocked) bench.release();
+    b.clear();
+    final benchStart = DateTime.now();
+    for (var i = 0; i < runs; i++) {
+        await bench.acquire();
+        print("run: $i");
+        lastStartTime = DateTime.now();
+        final builder = MqttClientPayloadBuilder();
+        builder.addString("GET:$devId");
+        client.publishMessage("all", MqttQos.atMostOnce, builder.payload!);
+    }
+    await bench.acquire();
+    runningBenchmark = false;
+    totalTime = DateTime.now().difference(benchStart).inMilliseconds;
+    bench.release();
+
+    return b;
+}
+    \end{lstlisting}
+    \caption{The Dart code for running the benchmark}
+    \label{code:app:bench}
+\end{figure}
+
+\begin{figure}[H]
+    \begin{lstlisting}[language=c++]
+final stat = Stats.fromData(l.map((e) => e.inMilliseconds)
+        .toList()).withPrecision(3);
+final reqPerSec = l.length /
+(Provider.of<SensorProvider>(context, listen: false).totalTime / 1000);
+    \end{lstlisting}
+    \caption{The Dart code for calculating statistics}
+    \label{code:app:stat}
+\end{figure}
+
+The benchmark results are displayed in a dialog popup. While the benchmark is running it displays running benchmark otherwise it displays the results. Examples of this can be found in figure \ref{fig:appBenchRun} and figure \ref{fig:appBenchRes} respectively. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{img/becnhrun.png} 
+    \caption{Dialog while benchmark is running}
+    \label{fig:appBenchRun}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{img/becnhdone.png} 
+    \caption{Dialog when benchmark is done}
+    \label{fig:appBenchRes}
+\end{figure}
