@@ -167,32 +167,40 @@ func handleCpu(w mux.ResponseWriter, r *mux.Message) {
 	w.SetResponse(codes.Content, message.TextPlain, bytes.NewReader([]byte(CPU+":"+MEM)))
 }
 
-func updateCPUAndMEM() {
-	var prevIdle, prevTot uint64
-	first := false
-	for {
-		mem, _ := linuxproc.ReadMemInfo("/proc/meminfo")
-		totMemMeg := float64(mem.MemTotal) * 0.0009765625
-		totalMem := strconv.Itoa(int(math.Round(totMemMeg)))
-		usedMemMeg := float64(mem.MemTotal-mem.MemFree) * 0.0009765625
-		usedMeme := strconv.Itoa(int(math.Round(usedMemMeg)))
-		MEM = usedMeme + "/" + totalMem
-		stat, _ := linuxproc.ReadStat("/proc/stat")
-		cpu := stat.CPUStatAll
-		tot := cpu.User + cpu.Nice + cpu.System + cpu.Idle + cpu.IOWait + cpu.IRQ + cpu.SoftIRQ + cpu.Steal + cpu.Guest + cpu.GuestNice
-		if first {
-			deltaIdle := cpu.Idle - prevIdle
-			deltaTot := tot - prevTot
-			cpuUsage := (1.0 - float64(deltaIdle)/float64(deltaTot)) * 100.0
-			proc := fmt.Sprintf("%6.3f", cpuUsage)
-			CPU = proc + "%"
-		} else {
-			first = true
-		}
-		prevIdle = cpu.Idle
-		prevTot = tot
-		time.Sleep(time.Second)
+func getMem() string {
+	mem, _ := linuxproc.ReadMemInfo("/proc/meminfo")
+	totMemMeg := float64(mem.MemTotal) * 0.0009765625
+	totalMem := strconv.Itoa(int(math.Round(totMemMeg)))
+	usedMemMeg := float64(mem.MemTotal-mem.MemFree) * 0.0009765625
+	usedMeme := strconv.Itoa(int(math.Round(usedMemMeg)))
+	memstr := usedMeme + "/" + totalMem
+	return memstr
+}
 
+func getCPU() string {
+	stat, _ := linuxproc.ReadStat("/proc/stat")
+	cpu := stat.CPUStatAll
+	tot := cpu.User + cpu.Nice + cpu.System + cpu.Idle + cpu.IOWait + cpu.IRQ + cpu.SoftIRQ + cpu.Steal + cpu.Guest + cpu.GuestNice
+
+	deltaIdle := cpu.Idle - prevIdle
+	deltaTot := tot - prevTot
+	cpuUsage := (1.0 - (float64(deltaIdle) / float64(deltaTot))) * 100.0
+	proc := fmt.Sprintf("%6.3f", cpuUsage)
+	cpuStr := proc + "%"
+
+	prevIdle = cpu.Idle
+	prevTot = tot
+
+	return cpuStr
+}
+
+var prevIdle, prevTot uint64 = 0, 0
+
+func updateCPUAndMEM() {
+	for {
+		MEM = getMem()
+		CPU = getCPU()
+		time.Sleep(time.Second)
 	}
 }
 
