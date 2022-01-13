@@ -24,10 +24,10 @@ func broadcaster(ch chan BroadCastMessage) {
 		if len(connections) <= 0 {
 			continue
 		}
-		fmt.Println(DEVIDER)
-		fmt.Println("Broadcasting message to: ",
-			message.Topic, "\ncontaining ", message.Message)
-		fmt.Println(DEVIDER)
+		// fmt.Println(DEVIDER)
+		// fmt.Println("Broadcasting message to: ",
+		// 	message.Topic, "\ncontaining ", message.Message)
+		// fmt.Println(DEVIDER)
 		fmt.Println()
 		for _, c := range subscriptions[message.Topic] {
 			(*c).Write(message.Packet)
@@ -107,7 +107,7 @@ func parseSubscribe(message []byte, c *net.Conn, id string) (bool, []byte, []str
 	body := message[2:]
 	var l []byte
 	var subscribe string
-	var qos int
+	//var qos int
 	var subs []string
 
 	for len(body) > 0 {
@@ -122,10 +122,10 @@ func parseSubscribe(message []byte, c *net.Conn, id string) (bool, []byte, []str
 		}
 		addSubscription(c, subscribe)
 		subs = append(subs, subscribe)
-		qos, body = int((body[0] & 0b00000011)), body[1:]
-		fmt.Println(DEVIDER)
-		fmt.Println(id+" subscribed to: "+subscribe+" \nWith QOS of:", qos)
-		fmt.Println(DEVIDER)
+		_, body = int((body[0] & 0b00000011)), body[1:]
+		// fmt.Println(DEVIDER)
+		// fmt.Println(id+" subscribed to: "+subscribe+" \nWith QOS of:", qos)
+		// fmt.Println(DEVIDER)
 		fmt.Println()
 	}
 	return true, message[:2], subs
@@ -140,9 +140,9 @@ func parseUnsubscribe(message []byte, c *net.Conn, id string) []byte {
 		subLen := binary.BigEndian.Uint16(l)
 		unSub, body = string(body[:subLen]), body[subLen:]
 		removeSubscription(c, unSub)
-		fmt.Println(DEVIDER)
-		fmt.Println(id + " unsubscribed from: " + unSub)
-		fmt.Println(DEVIDER)
+		// fmt.Println(DEVIDER)
+		// fmt.Println(id + " unsubscribed from: " + unSub)
+		// fmt.Println(DEVIDER)
 		fmt.Println()
 	}
 	return message[:2]
@@ -157,12 +157,12 @@ func parsePublish(message []byte, retain bool, id string) (string, string) {
 	topic, message = string(message[:topicLength]), message[topicLength:]
 
 	data = string(message)
-	fmt.Println(DEVIDER)
-	fmt.Println(id + " publshed: ")
-	fmt.Println("Topic: ", topic)
-	fmt.Println("Data: ", data)
-	fmt.Println("Will retain: ", retain)
-	fmt.Println(DEVIDER)
+	// fmt.Println(DEVIDER)
+	// fmt.Println(id + " publshed: ")
+	// fmt.Println("Topic: ", topic)
+	// fmt.Println("Data: ", data)
+	// fmt.Println("Will retain: ", retain)
+	// fmt.Println(DEVIDER)
 	fmt.Println()
 
 	return data, topic
@@ -181,17 +181,17 @@ func handleConnection(c *net.Conn, ch chan BroadCastMessage, id string) {
 		messageType := int((constHEAD[0] & 0b11110000) >> 4)
 		switch messageType {
 		case 12: //Ping
-			fmt.Println(DEVIDER)
-			fmt.Println("Answering Ping Request from: " + id)
-			fmt.Println(DEVIDER)
+			// fmt.Println(DEVIDER)
+			// fmt.Println("Answering Ping Request from: " + id)
+			// fmt.Println(DEVIDER)
 			fmt.Println()
 			pingAck := createPingAck()
 			(*c).Write(pingAck)
 			break
 		case 14: // Disconect
-			fmt.Println(DEVIDER)
-			fmt.Println("Disconnecting: " + id)
-			fmt.Println(DEVIDER)
+			// fmt.Println(DEVIDER)
+			// fmt.Println("Disconnecting: " + id)
+			// fmt.Println(DEVIDER)
 			fmt.Println()
 			removeAllSubs(c)
 			(*c).Close()
@@ -295,6 +295,9 @@ func acceptMessage(c *net.Conn, ch chan BroadCastMessage) {
 	remainder := int(constHEAD[1])
 	print(packetType)
 	if packetType != 1 {
+		fmt.Println(DEVIDER)
+		fmt.Println("Failed to connect client")
+		fmt.Println(DEVIDER)
 		(*c).Close()
 		return
 	}
