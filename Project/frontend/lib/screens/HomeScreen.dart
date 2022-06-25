@@ -100,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
               content: FutureBuilder(
                 //BENCHMARK
                 future: Provider.of<SensorProvider>(ctx, listen: false)
-                    .benchmark(10000),
+                    .benchmark(1000),
                 builder: (context, snapshot) {
                   return snapshot.connectionState == ConnectionState.waiting
                       ? const Text("Running benchmark")
